@@ -1,0 +1,33 @@
+<% const title = 'ログイン'; const body = `__BODY__`; %>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン - アルバイト管理システム</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>body { font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; }</style>
+</head>
+<body class="bg-indigo-50 min-h-screen flex items-center justify-center">
+  <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
+    <h1 class="text-2xl font-bold text-center text-indigo-700 mb-2">📋 アルバイト管理</h1>
+    <p class="text-center text-gray-500 text-sm mb-6"><%= settings.business_name %></p>
+    <% if (error) { %>
+      <div class="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm"><%= error %></div>
+    <% } %>
+    <form method="POST" action="/login">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">ユーザー名</label>
+        <input type="text" name="username" required autofocus
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+        <input type="password" name="password" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+      </div>
+      <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 font-medium">ログイン</button>
+    </form>
+  </div>
+</body>
+</html>

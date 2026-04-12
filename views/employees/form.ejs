@@ -1,0 +1,270 @@
+<%- include('../layout') %>
+
+<div class="mb-4">
+  <a href="/employees" class="text-indigo-600 hover:underline text-sm">&larr; 従業員一覧に戻る</a>
+</div>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-6"><%= employee ? '従業員編集' : '従業員登録' %></h1>
+
+<div class="bg-white rounded-xl shadow p-6 max-w-2xl">
+  <form method="POST" action="<%= employee ? '/employees/' + employee.id : '/employees' %>">
+    <h2 class="font-bold text-gray-700 mb-3 border-b pb-2">基本情報</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">氏名 <span class="text-red-500">*</span></label>
+        <input type="text" name="name" value="<%= employee ? employee.name : '' %>" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">フリガナ</label>
+        <input type="text" name="name_kana" value="<%= employee ? employee.name_kana || '' : '' %>"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">性別</label>
+        <select name="gender" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <option value="">選択してください</option>
+          <option value="男" <%= employee && employee.gender === '男' ? 'selected' : '' %>>男</option>
+          <option value="女" <%= employee && employee.gender === '女' ? 'selected' : '' %>>女</option>
+          <option value="その他" <%= employee && employee.gender === 'その他' ? 'selected' : '' %>>その他</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
+        <input type="date" name="birth_date" value="<%= employee ? employee.birth_date || '' : '' %>"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">住所</label>
+        <input type="text" name="address" value="<%= employee ? employee.address || '' : '' %>"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
+        <input type="tel" name="phone" value="<%= employee ? employee.phone || '' : '' %>"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">雇入日</label>
+        <input type="date" name="hire_date" value="<%= employee ? employee.hire_date || '' : '' %>"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">雇用形態</label>
+        <select name="employment_type" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <option value="アルバイト" <%= (!employee || employee.employment_type === 'アルバイト') ? 'selected' : '' %>>アルバイト</option>
+          <option value="パート" <%= employee && employee.employment_type === 'パート' ? 'selected' : '' %>>パート</option>
+        </select>
+      </div>
+      <% if (employee) { %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">状態</label>
+        <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <option value="active" <%= employee.status === 'active' ? 'selected' : '' %>>在籍</option>
+          <option value="inactive" <%= employee.status === 'inactive' ? 'selected' : '' %>>退職</option>
+        </select>
+      </div>
+      <% } %>
+    </div>
+
+    <h2 class="font-bold text-gray-700 mb-3 border-b pb-2">賃金・交通費</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">時給 <span class="text-red-500">*</span></label>
+        <div class="flex items-center gap-2">
+          <input type="number" name="hourly_wage" value="<%= employee ? employee.hourly_wage : 1200 %>" required min="1"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <span class="text-gray-500 text-sm">円</span>
+        </div>
+      </div>
+      <% if (employee) { %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">昇給理由（時給変更時）</label>
+        <input type="text" name="wage_reason" placeholder="例: スキル向上による昇給"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+      <% } %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">交通費の計算方法</label>
+        <select name="transport_type" class="w-full border border-gray-300 rounded-lg px-3 py-2" onchange="toggleTransport(this.value)">
+          <option value="daily" <%= (!employee || employee.transport_type === 'daily') ? 'selected' : '' %>>出社日数 x 日額</option>
+          <option value="monthly" <%= employee && employee.transport_type === 'monthly' ? 'selected' : '' %>>月額固定</option>
+          <option value="none" <%= employee && employee.transport_type === 'none' ? 'selected' : '' %>>交通費なし</option>
+        </select>
+      </div>
+      <div id="transport-daily">
+        <label class="block text-sm font-medium text-gray-700 mb-1">1日あたりの交通費</label>
+        <div class="flex items-center gap-2">
+          <input type="number" name="transport_cost_per_day" value="<%= employee ? employee.transport_cost_per_day || 0 : 0 %>" min="0"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <span class="text-gray-500 text-sm">円</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">出社日のみ計算（リモート日は除外）</p>
+      </div>
+      <div id="transport-monthly" style="display:none;">
+        <label class="block text-sm font-medium text-gray-700 mb-1">月額交通費</label>
+        <div class="flex items-center gap-2">
+          <input type="number" name="transport_cost_monthly" value="<%= employee ? employee.transport_cost_monthly || 0 : 0 %>" min="0"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <span class="text-gray-500 text-sm">円</span>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="font-bold text-gray-700 mb-3 border-b pb-2">源泉徴収設定</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">源泉徴収区分</label>
+        <select name="tax_table" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <option value="乙" <%= (!employee || employee.tax_table === '乙' || !employee.tax_table) ? 'selected' : '' %>>乙欄（扶養控除等申告書なし・掛け持ちなど）</option>
+          <option value="甲" <%= employee && employee.tax_table === '甲' ? 'selected' : '' %>>甲欄（扶養控除等申告書提出済み）</option>
+        </select>
+        <p class="text-xs text-gray-400 mt-1">バイト・パートは通常「乙欄」。メインの仕事として申告書を提出している場合は「甲欄」</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">扶養人数（甲欄の場合）</label>
+        <div class="flex items-center gap-2">
+          <input type="number" name="dependents" value="<%= employee ? (employee.dependents || 0) : 0 %>" min="0" max="10"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <span class="text-gray-500 text-sm">人</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">乙欄の場合は無視されます</p>
+      </div>
+    </div>
+
+    <h2 class="font-bold text-gray-700 mb-3 border-b pb-2">契約・休暇</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">契約終了日（有期の場合）</label>
+        <input type="date" name="contract_end_date" value="<%= employee ? employee.contract_end_date || '' : '' %>"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">有給付与日数</label>
+        <input type="number" name="paid_leave_days" value="<%= employee ? employee.paid_leave_days || 0 : 0 %>" min="0" step="0.5"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">メモ・備考</label>
+        <textarea name="memo" rows="3" placeholder="管理者用のメモ（本人には表示されません）"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2"><%= employee ? employee.memo || '' : '' %></textarea>
+      </div>
+    </div>
+
+    <% if (employee) { %>
+    <h2 class="font-bold text-gray-700 mb-3 border-b pb-2">毎月の固定控除（社会保険等）</h2>
+    <p class="text-xs text-gray-500 mb-3">ここで設定した控除は、給与計算時に自動で適用されます</p>
+    <div class="mb-4">
+      <% if (defaultDeductions.length > 0) { %>
+        <div class="space-y-2 mb-3">
+          <% defaultDeductions.forEach(d => { %>
+            <div class="flex items-center justify-between bg-red-50 rounded-lg px-3 py-2">
+              <span class="text-sm"><%= d.name %>: <span class="font-medium"><%= d.amount.toLocaleString() %>円</span></span>
+              <form method="POST" action="/employees/<%= employee.id %>/deduction/<%= d.id %>/delete" class="inline">
+                <button type="submit" class="text-red-400 hover:text-red-600 text-sm">&times; 削除</button>
+              </form>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p class="text-xs text-gray-400 mb-3">固定控除は未設定です</p>
+      <% } %>
+    </div>
+    <% } %>
+
+    <h2 class="font-bold text-gray-700 mb-3 border-b pb-2">ログインアカウント</h2>
+    <p class="text-xs text-gray-500 mb-3">アルバイト本人がシフト希望の提出や給与明細の確認に使うアカウントです</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">ユーザー名</label>
+        <input type="text" name="login_username" value="<%= loginUsername || '' %>" placeholder="例: tanaka"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">パスワード<%= employee && loginUsername ? '（変更する場合のみ）' : '' %></label>
+        <input type="password" name="login_password" placeholder="<%= employee && loginUsername ? '変更しない場合は空欄' : '' %>"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
+        <%= employee ? '更新' : '登録' %>
+      </button>
+      <a href="/employees" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300">キャンセル</a>
+    </div>
+  </form>
+</div>
+
+<% if (employee) { %>
+<div class="bg-white rounded-xl shadow p-6 max-w-2xl mt-6">
+  <h2 class="font-bold text-gray-700 mb-3">固定控除を追加</h2>
+  <p class="text-xs text-gray-500 mb-3">社会保険・雇用保険・住民税など、毎月固定で控除する項目を追加</p>
+  <form method="POST" action="/employees/<%= employee.id %>/deduction" class="flex flex-wrap items-end gap-3">
+    <div>
+      <label class="text-xs text-gray-600">控除名</label>
+      <select name="name" class="border rounded px-2 py-1 text-sm" onchange="if(this.value==='__custom__'){this.style.display='none';this.nextElementSibling.style.display='';this.nextElementSibling.focus();}">
+        <option value="雇用保険">雇用保険</option>
+        <option value="健康保険">健康保険</option>
+        <option value="厚生年金">厚生年金</option>
+        <option value="所得税">所得税</option>
+        <option value="住民税">住民税</option>
+        <option value="介護保険">介護保険</option>
+        <option value="__custom__">その他（自由入力）</option>
+      </select>
+      <input type="text" name="name" style="display:none;" placeholder="控除名を入力" class="border rounded px-2 py-1 text-sm">
+    </div>
+    <div>
+      <label class="text-xs text-gray-600">月額（円）</label>
+      <input type="number" name="amount" min="1" required class="w-28 border rounded px-2 py-1 text-sm">
+    </div>
+    <button type="submit" class="bg-red-500 text-white px-4 py-1 rounded text-sm hover:bg-red-600">追加</button>
+  </form>
+</div>
+<% } %>
+
+<% if (employee && wageHistory.length > 0) { %>
+<div class="bg-white rounded-xl shadow p-6 max-w-2xl mt-6">
+  <h2 class="font-bold text-gray-700 mb-3">昇給履歴</h2>
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 border-b">
+      <tr>
+        <th class="px-3 py-2 text-left text-gray-600">適用日</th>
+        <th class="px-3 py-2 text-left text-gray-600">時給</th>
+        <th class="px-3 py-2 text-left text-gray-600">理由</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% wageHistory.forEach(w => { %>
+        <tr class="border-b">
+          <td class="px-3 py-2"><%= w.effective_date %></td>
+          <td class="px-3 py-2"><%= w.hourly_wage.toLocaleString() %>円</td>
+          <td class="px-3 py-2 text-gray-500"><%= w.reason || '-' %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% } %>
+
+<% if (employee) { %>
+<div class="max-w-2xl mt-8 border border-red-200 rounded-xl p-5 bg-red-50">
+  <h2 class="font-bold text-red-700 mb-1 text-sm">危険な操作</h2>
+  <p class="text-xs text-red-500 mb-3">この操作は取り消せません。削除すると出退勤・給与データも全て失われます。</p>
+  <form method="POST" action="/employees/<%= employee.id %>/delete" onsubmit="return confirm('「<%= employee.name %>」のデータを完全に削除します。この操作は取り消せません。\n本当に削除しますか？')">
+    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700">この従業員を完全に削除する</button>
+  </form>
+</div>
+<% } %>
+
+<script>
+function toggleTransport(val) {
+  document.getElementById('transport-daily').style.display = val === 'daily' ? '' : 'none';
+  document.getElementById('transport-monthly').style.display = val === 'monthly' ? '' : 'none';
+}
+<% if (employee && employee.transport_type) { %>
+toggleTransport('<%= employee.transport_type %>');
+<% } %>
+</script>
+
+<%- include('../footer') %>

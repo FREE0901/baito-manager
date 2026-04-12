@@ -1,0 +1,53 @@
+<%- include('../layout') %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">お知らせ管理</h1>
+</div>
+
+<!-- 新規作成フォーム -->
+<div class="bg-white rounded-xl shadow p-6 mb-6">
+  <h2 class="text-lg font-semibold text-gray-700 mb-4">新しいお知らせを作成</h2>
+  <form method="POST" action="/announcements">
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-600 mb-1">タイトル <span class="text-red-500">*</span></label>
+      <input type="text" name="title" required
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        placeholder="お知らせのタイトルを入力">
+    </div>
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-600 mb-1">内容</label>
+      <textarea name="content" rows="4"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        placeholder="お知らせの内容を入力"></textarea>
+    </div>
+    <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-indigo-700">投稿する</button>
+  </form>
+</div>
+
+<!-- お知らせ一覧 -->
+<div class="space-y-4">
+  <% if (announcements.length === 0) { %>
+    <div class="bg-white rounded-xl shadow p-8 text-center text-gray-400">
+      お知らせはまだありません
+    </div>
+  <% } %>
+  <% announcements.forEach(a => { %>
+    <div class="bg-white rounded-xl shadow p-6">
+      <div class="flex items-start justify-between">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= a.title %></h3>
+          <p class="text-xs text-gray-400 mb-3"><%= a.created_at %></p>
+          <% if (a.content) { %>
+            <p class="text-sm text-gray-600 whitespace-pre-wrap"><%= a.content %></p>
+          <% } %>
+        </div>
+        <form method="POST" action="/announcements/<%= a.id %>/delete" class="ml-4 flex-shrink-0"
+          onsubmit="return confirm('このお知らせを削除しますか？')">
+          <button type="submit" class="text-red-500 hover:text-red-700 text-sm">削除</button>
+        </form>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<%- include('../footer') %>

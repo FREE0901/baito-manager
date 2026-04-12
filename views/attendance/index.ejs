@@ -1,0 +1,112 @@
+<%- include('../layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-4">出退勤記録</h1>
+
+<form method="GET" action="/attendance" class="flex flex-wrap items-end gap-3 mb-6">
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">従業員</label>
+    <select name="employee_id" required class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <option value="">選択してください</option>
+      <% employees.forEach(emp => { %>
+        <option value="<%= emp.id %>" <%= employeeId == emp.id ? 'selected' : '' %>><%= emp.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">年</label>
+    <input type="number" name="year" value="<%= year %>" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-24">
+  </div>
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">月</label>
+    <select name="month" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <% for (let m = 1; m <= 12; m++) { %>
+        <option value="<%= m %>" <%= month === m ? 'selected' : '' %>><%= m %>月</option>
+      <% } %>
+    </select>
+  </div>
+  <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">表示</button>
+</form>
+
+<% if (selectedEmployee && records.length > 0) { %>
+
+<div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">勤務日数</div>
+    <div class="text-xl font-bold text-indigo-600"><%= summary.workDays %>日</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">出社</div>
+    <div class="text-xl font-bold text-blue-600"><%= summary.officeDays %>日</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">リモート</div>
+    <div class="text-xl font-bold text-green-600"><%= summary.remoteDays %>日</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">総労働時間</div>
+    <div class="text-xl font-bold text-gray-700"><%= summary.totalHours.toFixed(1) %>h</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">時間外</div>
+    <div class="text-xl font-bold text-orange-600"><%= summary.overtimeHours.toFixed(1) %>h</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">深夜</div>
+    <div class="text-xl font-bold text-purple-600"><%= summary.nightHours.toFixed(1) %>h</div>
+  </div>
+</div>
+
+<form method="POST" action="/attendance/save">
+  <input type="hidden" name="employee_id" value="<%= employeeId %>">
+  <input type="hidden" name="year" value="<%= year %>">
+  <input type="hidden" name="month" value="<%= month %>">
+
+  <div class="bg-white rounded-xl shadow overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b">
+        <tr>
+          <th class="px-2 py-2 text-center text-gray-600 w-10">日</th>
+          <th class="px-2 py-2 text-center text-gray-600 w-8">曜</th>
+          <th class="px-2 py-2 text-center text-gray-600 w-16">区分</th>
+          <th class="px-2 py-2 text-center text-gray-600">出勤</th>
+          <th class="px-2 py-2 text-center text-gray-600">退勤</th>
+          <th class="px-2 py-2 text-center text-gray-600 w-16">休憩<span class="block text-xs font-normal text-gray-400">（分）</span></th>
+          <th class="px-2 py-2 text-center text-gray-600 w-16">時間外<span class="block text-xs font-normal text-gray-400">（分）</span></th>
+          <th class="px-2 py-2 text-center text-gray-600 w-16">深夜<span class="block text-xs font-normal text-gray-400">（分）</span></th>
+          <th class="px-2 py-2 text-center text-gray-600">備考</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% records.forEach(r => { %>
+          <tr class="border-b <%= r.isWeekend ? 'bg-gray-50' : '' %>">
+            <td class="px-2 py-1 text-center">
+              <input type="hidden" name="date" value="<%= r.date %>">
+              <%= r.day %>
+            </td>
+            <td class="px-2 py-1 text-center <%= r.dow === '日' ? 'text-red-500' : r.dow === '土' ? 'text-blue-500' : '' %>"><%= r.dow %></td>
+            <td class="px-2 py-1">
+              <select name="work_type" class="w-full border border-gray-200 rounded px-1 py-0.5 text-xs">
+                <option value="office" <%= (r.work_type || 'office') === 'office' ? 'selected' : '' %>>出社</option>
+                <option value="remote" <%= r.work_type === 'remote' ? 'selected' : '' %>>リモート</option>
+              </select>
+            </td>
+            <td class="px-2 py-1"><input type="time" name="clock_in" value="<%= r.clock_in || '' %>" class="w-full border border-gray-200 rounded px-1 py-0.5 text-sm"></td>
+            <td class="px-2 py-1"><input type="time" name="clock_out" value="<%= r.clock_out || '' %>" class="w-full border border-gray-200 rounded px-1 py-0.5 text-sm"></td>
+            <td class="px-2 py-1"><input type="number" name="break_minutes" value="<%= r.break_minutes || 0 %>" min="0" class="w-full border border-gray-200 rounded px-1 py-0.5 text-sm text-center"></td>
+            <td class="px-2 py-1"><input type="number" name="overtime_minutes" value="<%= r.overtime_minutes || 0 %>" min="0" class="w-full border border-gray-200 rounded px-1 py-0.5 text-sm text-center"></td>
+            <td class="px-2 py-1"><input type="number" name="night_minutes" value="<%= r.night_minutes || 0 %>" min="0" class="w-full border border-gray-200 rounded px-1 py-0.5 text-sm text-center"></td>
+            <td class="px-2 py-1"><input type="text" name="note" value="<%= r.note || '' %>" class="w-full border border-gray-200 rounded px-1 py-0.5 text-sm"></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-4">
+    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">保存</button>
+  </div>
+</form>
+<% } else if (!employeeId) { %>
+  <div class="bg-white rounded-xl shadow p-8 text-center text-gray-400">従業員と月を選択してください</div>
+<% } %>
+
+<%- include('../footer') %>

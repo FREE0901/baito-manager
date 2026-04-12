@@ -1,0 +1,19 @@
+{
+  "name": "baito-manager",
+  "version": "1.0.0",
+  "description": "アルバイト管理システム - WEB企画事務所FREE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.8.0",
+    "ejs": "^5.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0"
+  }
+}

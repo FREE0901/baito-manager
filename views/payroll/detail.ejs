@@ -1,0 +1,114 @@
+<%- include('../layout') %>
+
+<div class="mb-4 no-print">
+  <% if (user.role === 'admin') { %>
+    <a href="/payroll?year=<%= payroll.year %>&month=<%= payroll.month %>" class="text-indigo-600 hover:underline text-sm">&larr; 給与一覧に戻る</a>
+  <% } else { %>
+    <a href="/my/payroll" class="text-indigo-600 hover:underline text-sm">&larr; 給与一覧に戻る</a>
+  <% } %>
+</div>
+
+<div class="bg-white rounded-xl shadow p-6 max-w-2xl mx-auto">
+  <div class="text-center mb-6">
+    <h1 class="text-xl font-bold text-gray-800">給与明細書</h1>
+    <p class="text-gray-500 text-sm mt-1"><%= settings.business_name %></p>
+  </div>
+
+  <div class="flex justify-between mb-6 text-sm">
+    <div>
+      <p><strong><%= payroll.name %></strong> 様</p>
+      <% if (payroll.name_kana) { %><p class="text-gray-500 text-xs"><%= payroll.name_kana %></p><% } %>
+    </div>
+    <div class="text-right">
+      <p><%= payroll.year %>年<%= payroll.month %>月分</p>
+      <p class="text-gray-500 text-xs">時給: <%= payroll.hourly_wage.toLocaleString() %>円</p>
+    </div>
+  </div>
+
+  <!-- 勤務情報 -->
+  <table class="w-full text-sm border-collapse mb-4">
+    <thead><tr class="bg-gray-100"><th colspan="4" class="border px-3 py-2 text-left text-gray-700">勤務情報</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="border px-3 py-2 text-gray-600">勤務日数</td>
+        <td class="border px-3 py-2 text-right font-medium"><%= payroll.work_days %>日</td>
+        <td class="border px-3 py-2 text-gray-600">労働時間</td>
+        <td class="border px-3 py-2 text-right font-medium"><%= payroll.work_hours.toFixed(1) %>h</td>
+      </tr>
+      <tr>
+        <td class="border px-3 py-2 text-gray-600">出社</td>
+        <td class="border px-3 py-2 text-right"><%= payroll.office_days || 0 %>日</td>
+        <td class="border px-3 py-2 text-gray-600">リモート</td>
+        <td class="border px-3 py-2 text-right"><%= payroll.remote_days || 0 %>日</td>
+      </tr>
+      <% if (payroll.overtime_hours > 0 || payroll.night_hours > 0) { %>
+      <tr>
+        <td class="border px-3 py-2 text-gray-600">時間外労働</td>
+        <td class="border px-3 py-2 text-right"><%= payroll.overtime_hours.toFixed(1) %>h</td>
+        <td class="border px-3 py-2 text-gray-600">深夜労働</td>
+        <td class="border px-3 py-2 text-right"><%= payroll.night_hours.toFixed(1) %>h</td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+
+  <!-- 支給 -->
+  <table class="w-full text-sm border-collapse mb-4">
+    <thead><tr class="bg-indigo-50"><th colspan="2" class="border px-3 py-2 text-left text-indigo-700">支給項目</th></tr></thead>
+    <tbody>
+      <tr><td class="border px-3 py-2">基本給（<%= payroll.work_hours.toFixed(1) %>h x <%= payroll.hourly_wage.toLocaleString() %>円）</td><td class="border px-3 py-2 text-right"><%= payroll.base_pay.toLocaleString() %> 円</td></tr>
+      <% if (payroll.overtime_pay > 0) { %>
+      <tr><td class="border px-3 py-2">時間外手当（<%= payroll.overtime_hours.toFixed(1) %>h）</td><td class="border px-3 py-2 text-right"><%= payroll.overtime_pay.toLocaleString() %> 円</td></tr>
+      <% } %>
+      <% if (payroll.night_pay > 0) { %>
+      <tr><td class="border px-3 py-2">深夜手当（<%= payroll.night_hours.toFixed(1) %>h）</td><td class="border px-3 py-2 text-right"><%= payroll.night_pay.toLocaleString() %> 円</td></tr>
+      <% } %>
+      <tr>
+        <td class="border px-3 py-2">
+          通勤手当
+          <% if (payroll.transport_type === 'daily') { %>
+            <span class="text-xs text-gray-400">（出社<%= payroll.office_days || 0 %>日 x <%= (payroll.transport_cost_per_day || 0).toLocaleString() %>円）</span>
+          <% } else if (payroll.transport_type === 'monthly') { %>
+            <span class="text-xs text-gray-400">（月額固定）</span>
+          <% } %>
+        </td>
+        <td class="border px-3 py-2 text-right"><%= payroll.transport_cost.toLocaleString() %> 円</td>
+      </tr>
+      <% if (typeof allowances !== 'undefined' && allowances.length > 0) { %>
+        <% allowances.forEach(a => { %>
+      <tr><td class="border px-3 py-2"><%= a.name %></td><td class="border px-3 py-2 text-right"><%= a.amount.toLocaleString() %> 円</td></tr>
+        <% }) %>
+      <% } %>
+      <tr class="bg-indigo-50 font-bold"><td class="border px-3 py-2">総支給額</td><td class="border px-3 py-2 text-right"><%= payroll.gross_pay.toLocaleString() %> 円</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 控除 -->
+  <table class="w-full text-sm border-collapse mb-6">
+    <thead><tr class="bg-red-50"><th colspan="2" class="border px-3 py-2 text-left text-red-700">控除項目</th></tr></thead>
+    <tbody>
+      <tr><td class="border px-3 py-2">雇用保険</td><td class="border px-3 py-2 text-right"><%= payroll.insurance.toLocaleString() %> 円</td></tr>
+      <tr><td class="border px-3 py-2">所得税</td><td class="border px-3 py-2 text-right"><%= payroll.income_tax.toLocaleString() %> 円</td></tr>
+      <% if (payroll.other_deduction > 0) { %>
+      <tr><td class="border px-3 py-2">その他控除</td><td class="border px-3 py-2 text-right"><%= payroll.other_deduction.toLocaleString() %> 円</td></tr>
+      <% } %>
+      <% if (typeof deductionItems !== 'undefined' && deductionItems.length > 0) { %>
+        <% deductionItems.forEach(d => { %>
+      <tr><td class="border px-3 py-2"><%= d.name %></td><td class="border px-3 py-2 text-right"><%= d.amount.toLocaleString() %> 円</td></tr>
+        <% }) %>
+      <% } %>
+      <tr class="bg-red-50 font-bold"><td class="border px-3 py-2">控除合計</td><td class="border px-3 py-2 text-right"><%= payroll.total_deduction.toLocaleString() %> 円</td></tr>
+    </tbody>
+  </table>
+
+  <div class="bg-gray-100 rounded-lg p-4 text-center">
+    <div class="text-sm text-gray-500">差引支給額</div>
+    <div class="text-3xl font-bold text-indigo-700"><%= payroll.net_pay.toLocaleString() %> 円</div>
+  </div>
+
+  <div class="mt-6 text-center no-print">
+    <button onclick="window.print()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 text-sm">印刷</button>
+  </div>
+</div>
+
+<%- include('../footer') %>

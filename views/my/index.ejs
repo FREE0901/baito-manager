@@ -1,0 +1,142 @@
+<%- include('layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-2">こんにちは、<%= employee.name %>さん</h1>
+<p class="text-gray-500 text-sm mb-6">時給: <%= employee.hourly_wage.toLocaleString() %>円</p>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <div class="text-xs text-gray-500">今月の勤務</div>
+    <div class="text-2xl font-bold text-green-600"><%= monthAttendance.days || 0 %><span class="text-sm font-normal text-gray-500"> 日</span></div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <div class="text-xs text-gray-500">労働時間</div>
+    <div class="text-2xl font-bold text-blue-600"><%= (monthAttendance.hours || 0).toFixed(1) %><span class="text-sm font-normal text-gray-500"> h</span></div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <div class="text-xs text-gray-500">未承認希望</div>
+    <div class="text-2xl font-bold text-orange-600"><%= pendingRequests.length %><span class="text-sm font-normal text-gray-500"> 件</span></div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <div class="text-xs text-gray-500">有給残日数</div>
+    <div class="text-2xl font-bold text-purple-600"><%= leaveRemaining %><span class="text-sm font-normal text-gray-500"> 日</span></div>
+  </div>
+</div>
+
+<!-- 打刻ボタン -->
+<div class="bg-white rounded-xl shadow p-5 mb-6">
+  <h2 class="font-bold text-gray-700 mb-3">打刻（<%= today %>）</h2>
+  <% if (todayAttendance && todayAttendance.clock_in && todayAttendance.clock_out) { %>
+    <p class="text-green-600 font-medium">出勤 <%= todayAttendance.clock_in %> ／ 退勤 <%= todayAttendance.clock_out %></p>
+    <p class="text-gray-400 text-xs mt-1">本日の打刻は完了しています</p>
+  <% } else if (todayAttendance && todayAttendance.clock_in) { %>
+    <p class="text-blue-600 font-medium mb-3">出勤済み: <%= todayAttendance.clock_in %></p>
+    <form method="POST" action="/my/clock-out" class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="text-xs text-gray-600">区分</label>
+        <select name="work_type" class="border rounded px-2 py-1 text-sm">
+          <option value="office" <%= todayAttendance.work_type === 'office' ? 'selected' : '' %>>出社</option>
+          <option value="remote" <%= todayAttendance.work_type === 'remote' ? 'selected' : '' %>>リモート</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-600">休憩（分）</label>
+        <input type="number" name="break_minutes" value="60" min="0" class="w-20 border rounded px-2 py-1 text-sm">
+      </div>
+      <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-red-700">退勤</button>
+    </form>
+  <% } else { %>
+    <form method="POST" action="/my/clock-in" class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="text-xs text-gray-600">区分</label>
+        <select name="work_type" class="border rounded px-2 py-1 text-sm">
+          <option value="office">出社</option>
+          <option value="remote">リモート</option>
+        </select>
+      </div>
+      <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-green-700">出勤</button>
+    </form>
+  <% } %>
+</div>
+
+<!-- お知らせ -->
+<% if (announcements.length > 0) { %>
+<div class="bg-white rounded-xl shadow p-5 mb-6">
+  <h2 class="font-bold text-gray-700 mb-3">お知らせ</h2>
+  <ul class="space-y-2">
+    <% announcements.forEach(a => { %>
+      <li class="border-b pb-2">
+        <div class="flex justify-between items-start">
+          <span class="font-medium text-sm"><%= a.title %></span>
+          <span class="text-xs text-gray-400"><%= a.created_at %></span>
+        </div>
+        <% if (a.content) { %><p class="text-sm text-gray-600 mt-1" style="white-space: pre-wrap;"><%= a.content %></p><% } %>
+      </li>
+    <% }) %>
+  </ul>
+</div>
+<% } %>
+
+<!-- 今日のシフト -->
+<div class="bg-white rounded-xl shadow p-5 mb-6">
+  <h2 class="font-bold text-gray-700 mb-3">今日のシフト（<%= today %>）</h2>
+  <% if (todayShift) { %>
+    <div class="text-lg font-medium text-green-700"><%= todayShift.start_time %> - <%= todayShift.end_time %></div>
+    <% if (todayShift.note) { %><p class="text-sm text-gray-500 mt-1"><%= todayShift.note %></p><% } %>
+  <% } else { %>
+    <p class="text-gray-400 text-sm">今日のシフトはありません</p>
+  <% } %>
+</div>
+
+<!-- 担当タスク -->
+<% if (myTasks.length > 0) { %>
+<div class="bg-white rounded-xl shadow p-5 mb-6">
+  <h2 class="font-bold text-gray-700 mb-3">担当業務</h2>
+  <ul class="space-y-2">
+    <% myTasks.forEach(t => { %>
+      <li class="flex justify-between items-center py-2 border-b">
+        <div>
+          <% if (t.priority === 'high') { %><span class="bg-red-100 text-red-700 text-xs px-1.5 py-0.5 rounded mr-1">高</span><% } %>
+          <span class="text-sm font-medium"><%= t.title %></span>
+          <% if (t.due_date) { %><span class="text-xs text-gray-400 ml-2">〆 <%= t.due_date %></span><% } %>
+        </div>
+        <div class="flex gap-1">
+          <% if (t.status === 'pending') { %>
+            <form method="POST" action="/my/tasks/<%= t.id %>/update"><input type="hidden" name="status" value="in_progress"><button class="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">着手</button></form>
+          <% } else if (t.status === 'in_progress') { %>
+            <form method="POST" action="/my/tasks/<%= t.id %>/update"><input type="hidden" name="status" value="completed"><button class="bg-green-500 text-white px-2 py-0.5 rounded text-xs">完了</button></form>
+          <% } else { %>
+            <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">完了</span>
+          <% } %>
+        </div>
+      </li>
+    <% }) %>
+  </ul>
+  <a href="/my/tasks" class="text-green-600 hover:underline text-sm mt-2 inline-block">すべて見る →</a>
+</div>
+<% } %>
+
+<!-- 今後のシフト -->
+<div class="bg-white rounded-xl shadow p-5 mb-6">
+  <h2 class="font-bold text-gray-700 mb-3">今後のシフト</h2>
+  <% if (upcomingShifts.length === 0) { %>
+    <p class="text-gray-400 text-sm">予定はありません</p>
+  <% } else { %>
+    <ul class="space-y-2">
+      <% upcomingShifts.forEach(s => { %>
+        <li class="flex justify-between items-center py-2 border-b">
+          <span class="text-sm font-medium"><%= s.date %></span>
+          <span class="text-sm text-gray-500"><%= s.start_time %> - <%= s.end_time %></span>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</div>
+
+<div class="flex flex-wrap gap-3">
+  <a href="/my/shift-request" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700">シフト希望を出す</a>
+  <a href="/my/attendance" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">出退勤を確認</a>
+  <a href="/my/report" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700">業務報告</a>
+  <a href="/my/payroll" class="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-700">給与明細</a>
+</div>
+
+<%- include('footer') %>

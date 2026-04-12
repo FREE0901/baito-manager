@@ -1,0 +1,50 @@
+<%- include('../layout') %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">従業員一覧</h1>
+  <a href="/employees/new" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">+ 新規登録</a>
+</div>
+
+<div class="bg-white rounded-xl shadow overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 border-b">
+      <tr>
+        <th class="px-4 py-3 text-left text-gray-600">氏名</th>
+        <th class="px-4 py-3 text-left text-gray-600 hidden md:table-cell">フリガナ</th>
+        <th class="px-4 py-3 text-left text-gray-600">時給</th>
+        <th class="px-4 py-3 text-left text-gray-600 hidden md:table-cell">雇入日</th>
+        <th class="px-4 py-3 text-left text-gray-600 hidden lg:table-cell">電話番号</th>
+        <th class="px-4 py-3 text-left text-gray-600 hidden lg:table-cell">ログインID</th>
+        <th class="px-4 py-3 text-left text-gray-600">状態</th>
+        <th class="px-4 py-3 text-left text-gray-600">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (employees.length === 0) { %>
+        <tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">従業員が登録されていません</td></tr>
+      <% } %>
+      <% employees.forEach(emp => { %>
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-4 py-3 font-medium"><%= emp.name %></td>
+          <td class="px-4 py-3 hidden md:table-cell text-gray-500"><%= emp.name_kana || '-' %></td>
+          <td class="px-4 py-3"><%= emp.hourly_wage.toLocaleString() %>円</td>
+          <td class="px-4 py-3 hidden md:table-cell text-gray-500"><%= emp.hire_date || '-' %></td>
+          <td class="px-4 py-3 hidden lg:table-cell text-gray-500"><%= emp.phone || '-' %></td>
+          <td class="px-4 py-3 hidden lg:table-cell text-gray-500 text-xs"><%= emp.login_username || '-' %></td>
+          <td class="px-4 py-3">
+            <% if (emp.status === 'active') { %>
+              <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs">在籍</span>
+            <% } else { %>
+              <span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-xs">退職</span>
+            <% } %>
+          </td>
+          <td class="px-4 py-3">
+            <a href="/employees/<%= emp.id %>/edit" class="text-indigo-600 hover:underline text-sm">編集</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../footer') %>

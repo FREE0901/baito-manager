@@ -1,0 +1,127 @@
+<%- include('../layout') %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">有給休暇管理</h1>
+  <form method="GET" action="/leaves" class="flex items-center gap-2">
+    <label class="text-sm text-gray-600">年度:</label>
+    <select name="year" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+      <% for (let y = new Date().getFullYear(); y >= new Date().getFullYear() - 5; y--) { %>
+        <option value="<%= y %>" <%= y == year ? 'selected' : '' %>><%= y %>年</option>
+      <% } %>
+    </select>
+  </form>
+</div>
+
+<!-- 従業員別サマリー -->
+<h2 class="text-lg font-bold text-gray-700 mb-3">従業員別 有給残日数</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+  <% employees.forEach(emp => { %>
+    <% const used = usedDaysMap[emp.id] || 0; %>
+    <% const entitlement = emp.paid_leave_days || 0; %>
+    <% const remaining = entitlement - used; %>
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="font-bold text-gray-800 mb-2"><%= emp.name %></div>
+      <div class="grid grid-cols-3 gap-2 text-center text-sm">
+        <div>
+          <div class="text-gray-500">付与</div>
+          <div class="text-lg font-bold text-indigo-600"><%= entitlement %></div>
+        </div>
+        <div>
+          <div class="text-gray-500">使用</div>
+          <div class="text-lg font-bold text-orange-500"><%= used %></div>
+        </div>
+        <div>
+          <div class="text-gray-500">残り</div>
+          <div class="text-lg font-bold <%= remaining <= 0 ? 'text-red-500' : 'text-green-600' %>"><%= remaining %></div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+  <% if (employees.length === 0) { %>
+    <div class="col-span-full text-center text-gray-400 py-4">アクティブな従業員がいません</div>
+  <% } %>
+</div>
+
+<!-- 承認待ちリクエスト -->
+<% const pendingLeaves = leaves.filter(l => l.status === 'pending'); %>
+<h2 class="text-lg font-bold text-gray-700 mb-3">承認待ち (<%= pendingLeaves.length %>件)</h2>
+<% if (pendingLeaves.length === 0) { %>
+  <div class="bg-white rounded-xl shadow p-6 text-center text-gray-400 mb-8">承認待ちの申請はありません</div>
+<% } else { %>
+  <div class="space-y-4 mb-8">
+    <% pendingLeaves.forEach(leave => { %>
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-1">
+              <span class="font-bold text-gray-800"><%= leave.employee_name %></span>
+              <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full">承認待ち</span>
+            </div>
+            <div class="text-sm text-gray-600">
+              <span class="mr-4">日付: <strong><%= leave.date %></strong></span>
+              <span class="mr-4">種別: <%= leave.type === 'paid' ? '有給' : leave.type %></span>
+            </div>
+            <% if (leave.reason) { %>
+              <div class="text-sm text-gray-500 mt-1">理由: <%= leave.reason %></div>
+            <% } %>
+          </div>
+          <div class="flex items-end gap-2">
+            <form method="POST" action="/leaves/<%= leave.id %>/approve" class="flex items-end gap-2">
+              <div>
+                <label class="text-xs text-gray-500">管理者メモ</label>
+                <input type="text" name="admin_note" placeholder="メモ（任意）" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-40">
+              </div>
+              <button type="submit" class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-green-700">承認</button>
+            </form>
+            <form method="POST" action="/leaves/<%= leave.id %>/reject">
+              <input type="hidden" name="admin_note" value="">
+              <button type="submit" class="bg-red-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-red-600">却下</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<!-- 処理済みリクエスト -->
+<% const processedLeaves = leaves.filter(l => l.status !== 'pending'); %>
+<h2 class="text-lg font-bold text-gray-700 mb-3">処理済み (<%= processedLeaves.length %>件)</h2>
+<% if (processedLeaves.length === 0) { %>
+  <div class="bg-white rounded-xl shadow p-6 text-center text-gray-400">処理済みの申請はありません</div>
+<% } else { %>
+  <div class="bg-white rounded-xl shadow overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b">
+        <tr>
+          <th class="px-4 py-3 text-left text-gray-600">従業員</th>
+          <th class="px-4 py-3 text-left text-gray-600">日付</th>
+          <th class="px-4 py-3 text-left text-gray-600">種別</th>
+          <th class="px-4 py-3 text-left text-gray-600 hidden md:table-cell">理由</th>
+          <th class="px-4 py-3 text-left text-gray-600">ステータス</th>
+          <th class="px-4 py-3 text-left text-gray-600 hidden md:table-cell">管理者メモ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% processedLeaves.forEach(leave => { %>
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium"><%= leave.employee_name %></td>
+            <td class="px-4 py-3"><%= leave.date %></td>
+            <td class="px-4 py-3"><%= leave.type === 'paid' ? '有給' : leave.type %></td>
+            <td class="px-4 py-3 hidden md:table-cell text-gray-500"><%= leave.reason || '-' %></td>
+            <td class="px-4 py-3">
+              <% if (leave.status === 'approved') { %>
+                <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">承認済</span>
+              <% } else { %>
+                <span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">却下</span>
+              <% } %>
+            </td>
+            <td class="px-4 py-3 hidden md:table-cell text-gray-500"><%= leave.admin_note || '-' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<%- include('../footer') %>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アルバイト管理システム</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <% if (user) { %>
+  <nav class="bg-indigo-700 text-white no-print">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between h-14">
+        <a href="/dashboard" class="font-bold text-lg"><%= settings.business_name || 'アルバイト管理' %></a>
+        <ul class="hidden lg:flex items-center gap-5 text-sm">
+          <li><a href="/dashboard" class="<%= path === '/dashboard' ? 'text-white font-bold underline underline-offset-4' : 'text-indigo-200 hover:text-white' %>">ダッシュボード</a></li>
+          <li><a href="/employees" class="<%= path.startsWith('/employees') ? 'text-white font-bold underline underline-offset-4' : 'text-indigo-200 hover:text-white' %>">従業員</a></li>
+          <li><a href="/shifts" class="<%= path.startsWith('/shifts') ? 'text-white font-bold underline underline-offset-4' : 'text-indigo-200 hover:text-white' %>">シフト<% if (pendingRequests > 0) { %><span class="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1"><%= pendingRequests %></span><% } %></a></li>
+          <li><a href="/attendance" class="<%= path.startsWith('/attendance') ? 'text-white font-bold underline underline-offset-4' : 'text-indigo-200 hover:text-white' %>">出退勤</a></li>
+          <li><a href="/payroll" class="<%= path.startsWith('/payroll') ? 'text-white font-bold underline underline-offset-4' : 'text-indigo-200 hover:text-white' %>">給与</a></li>
+          <li><a href="/tasks" class="<%= path.startsWith('/tasks') ? 'text-white font-bold underline underline-offset-4' : 'text-indigo-200 hover:text-white' %>">業務</a></li>
+          <li class="relative" id="dropdown-wrapper">
+            <button id="dropdown-btn" onclick="toggleDropdown()" class="text-indigo-200 hover:text-white flex items-center gap-1">その他 <span id="dropdown-arrow">▾</span></button>
+            <div id="dropdown-menu" class="hidden absolute right-0 top-full mt-1 bg-indigo-800 rounded-lg shadow-lg py-2 min-w-[160px] z-50">
+              <a href="/announcements" class="block px-4 py-2 text-sm text-indigo-200 hover:text-white hover:bg-indigo-700">お知らせ</a>
+              <a href="/reports" class="block px-4 py-2 text-sm text-indigo-200 hover:text-white hover:bg-indigo-700">業務報告</a>
+              <a href="/leaves" class="block px-4 py-2 text-sm text-indigo-200 hover:text-white hover:bg-indigo-700">有給休暇</a>
+              <a href="/settings" class="block px-4 py-2 text-sm text-indigo-200 hover:text-white hover:bg-indigo-700">設定</a>
+              <a href="/export" class="block px-4 py-2 text-sm text-indigo-200 hover:text-white hover:bg-indigo-700">データ出力</a>
+            </div>
+          </li>
+          <li class="ml-2 border-l border-indigo-500 pl-4"><a href="/logout" class="text-indigo-200 hover:text-white">ログアウト</a></li>
+        </ul>
+        <button id="hamburger" class="lg:hidden flex flex-col gap-1.5 p-2">
+          <span class="block w-6 h-0.5 bg-white"></span>
+          <span class="block w-6 h-0.5 bg-white"></span>
+          <span class="block w-6 h-0.5 bg-white"></span>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden lg:hidden bg-indigo-800 px-4 pb-4">
+      <a href="/dashboard" class="block py-2 text-indigo-200 hover:text-white">ダッシュボード</a>
+      <a href="/employees" class="block py-2 text-indigo-200 hover:text-white">従業員</a>
+      <a href="/shifts" class="block py-2 text-indigo-200 hover:text-white">シフト<% if (pendingRequests > 0) { %><span class="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1"><%= pendingRequests %></span><% } %></a>
+      <a href="/attendance" class="block py-2 text-indigo-200 hover:text-white">出退勤</a>
+      <a href="/payroll" class="block py-2 text-indigo-200 hover:text-white">給与</a>
+      <a href="/tasks" class="block py-2 text-indigo-200 hover:text-white">業務</a>
+      <a href="/announcements" class="block py-2 text-indigo-200 hover:text-white">お知らせ</a>
+      <a href="/reports" class="block py-2 text-indigo-200 hover:text-white">業務報告</a>
+      <a href="/leaves" class="block py-2 text-indigo-200 hover:text-white">有給休暇</a>
+      <a href="/settings" class="block py-2 text-indigo-200 hover:text-white">設定</a>
+      <a href="/export" class="block py-2 text-indigo-200 hover:text-white">データ出力</a>
+      <a href="/logout" class="block py-2 mt-2 border-t border-indigo-600 text-indigo-200 hover:text-white">ログアウト</a>
+    </div>
+  </nav>
+  <% } %>
+  <main class="max-w-7xl mx-auto px-4 py-6">

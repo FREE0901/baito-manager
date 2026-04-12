@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マイページ - <%= settings.business_name %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="bg-green-700 text-white no-print">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="flex items-center justify-between h-14">
+        <a href="/my" class="font-bold text-lg"><%= settings.business_name %></a>
+        <ul class="hidden md:flex items-center gap-4 text-sm">
+          <li><a href="/my" class="<%= path === '/my' ? 'text-white font-bold underline underline-offset-4' : 'text-green-200 hover:text-white' %>">ホーム</a></li>
+          <li><a href="/my/shift-request" class="<%= path.startsWith('/my/shift-request') ? 'text-white font-bold underline underline-offset-4' : 'text-green-200 hover:text-white' %>">シフト希望</a></li>
+          <li><a href="/my/attendance" class="<%= path.startsWith('/my/attendance') ? 'text-white font-bold underline underline-offset-4' : 'text-green-200 hover:text-white' %>">出退勤</a></li>
+          <li><a href="/my/tasks" class="<%= path.startsWith('/my/tasks') ? 'text-white font-bold underline underline-offset-4' : 'text-green-200 hover:text-white' %>">業務</a></li>
+          <li><a href="/my/report" class="<%= path.startsWith('/my/report') ? 'text-white font-bold underline underline-offset-4' : 'text-green-200 hover:text-white' %>">報告</a></li>
+          <li><a href="/my/payroll" class="<%= path.startsWith('/my/payroll') ? 'text-white font-bold underline underline-offset-4' : 'text-green-200 hover:text-white' %>">給与明細</a></li>
+          <li class="ml-2 border-l border-green-500 pl-3"><a href="/logout" class="text-green-200 hover:text-white">ログアウト</a></li>
+        </ul>
+        <button id="hamburger" class="md:hidden flex flex-col gap-1.5 p-2">
+          <span class="block w-6 h-0.5 bg-white"></span>
+          <span class="block w-6 h-0.5 bg-white"></span>
+          <span class="block w-6 h-0.5 bg-white"></span>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden bg-green-800 px-4 pb-4">
+      <a href="/my" class="block py-2 text-green-200 hover:text-white">ホーム</a>
+      <a href="/my/shift-request" class="block py-2 text-green-200 hover:text-white">シフト希望</a>
+      <a href="/my/attendance" class="block py-2 text-green-200 hover:text-white">出退勤</a>
+      <a href="/my/tasks" class="block py-2 text-green-200 hover:text-white">業務</a>
+      <a href="/my/report" class="block py-2 text-green-200 hover:text-white">報告</a>
+      <a href="/my/payroll" class="block py-2 text-green-200 hover:text-white">給与明細</a>
+      <a href="/logout" class="block py-2 mt-2 border-t border-green-600 text-green-200 hover:text-white">ログアウト</a>
+    </div>
+  </nav>
+  <main class="max-w-4xl mx-auto px-4 py-6">
