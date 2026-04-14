@@ -125,16 +125,18 @@ app.use(session({
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
-    // trust proxy設定により本番でもreq.secureがtrueになるのでautoに設定
-    secure: 'auto',
+    // Railway環境ではsecureをfalseにする（CDNでTLS終端されるため）
+    secure: false,
     sameSite: 'lax'
   }
 }));
 
-// CDN（Fastly等）によるSet-Cookieヘッダー除去を防ぐ
+// CDN（Fastly/Railway edge）によるSet-Cookieヘッダー除去を防ぐ
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Surrogate-Control', 'no-store');  // Fastly向け
+  res.setHeader('Vary', 'Cookie');
   next();
 });
 
