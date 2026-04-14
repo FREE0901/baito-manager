@@ -16,15 +16,22 @@ router.post('/login', (req, res) => {
     return res.render('login', { error: 'ユーザー名またはパスワードが正しくありません' });
   }
   req.session.user = { id: user.id, username: user.username, role: user.role || 'admin', employee_id: user.employee_id };
-  // 初回ログイン時はパスワード変更を強制
-  if (user.must_change_password) {
-    return res.redirect('/change-password');
-  }
-  if (user.role === 'employee') {
-    res.redirect('/my');
-  } else {
-    res.redirect('/dashboard');
-  }
+  // セッションを明示的に保存してからリダイレクト（CDN環境でのSet-Cookie確保）
+  req.session.save((err) => {
+    if (err) {
+      console.error('セッション保存エラー:', err);
+      return res.render('login', { error: 'ログインに失敗しました。再度お試しください。' });
+    }
+    // 初回ログイン時はパスワード変更を強制
+    if (user.must_change_password) {
+      return res.redirect('/change-password');
+    }
+    if (user.role === 'employee') {
+      res.redirect('/my');
+    } else {
+      res.redirect('/dashboard');
+    }
+  });
 });
 
 // パスワード変更（強制・任意共用）
