@@ -110,6 +110,8 @@ if (!adminExists) {
 // ミドルウェア
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+// Railway等のリバースプロキシ環境でreq.secureを正しく判定するために必要
+app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -123,7 +125,8 @@ app.use(session({
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    // trust proxy設定により本番でもreq.secureがtrueになるのでautoに設定
+    secure: 'auto',
     sameSite: 'lax'
   }
 }));
