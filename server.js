@@ -128,6 +128,13 @@ app.use(session({
   }
 }));
 
+// CDN（Fastly等）によるSet-Cookieヘッダー除去を防ぐ
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  next();
+});
+
 // DBをリクエストに渡す
 app.use((req, res, next) => {
   req.db = db;
