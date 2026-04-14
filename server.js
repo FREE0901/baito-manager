@@ -192,6 +192,19 @@ app.use('/export', requireAdmin, require('./routes/export'));
 // バイト用ルート
 app.use('/my', requireEmployee, require('./routes/my'));
 
+// デバッグ用（一時的）
+app.get('/debug-cookie', (req, res) => {
+  res.setHeader('Set-Cookie', 'test-cookie=hello; Path=/; HttpOnly');
+  res.json({
+    sessionID: req.sessionID,
+    session: req.session,
+    cookies: req.headers.cookie,
+    secure: req.secure,
+    protocol: req.protocol,
+    headers: req.headers
+  });
+});
+
 app.get('/', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   if (req.session.user.role === 'employee') return res.redirect('/my');
