@@ -19,18 +19,22 @@ router.post('/', (req, res) => {
   const { name, name_kana, gender, birth_date, address, phone, hourly_wage, hire_date,
           employment_type, transport_type, transport_cost_per_day, transport_cost_monthly,
           contract_end_date, paid_leave_days, memo, tax_table, dependents,
+          bank_name, bank_branch, bank_account_type, bank_account_number, bank_account_name,
           login_username, login_password } = req.body;
 
   const result = req.db.prepare(`
     INSERT INTO employees (name, name_kana, gender, birth_date, address, phone, hourly_wage, hire_date,
       employment_type, transport_type, transport_cost_per_day, transport_cost_monthly,
-      contract_end_date, paid_leave_days, memo, tax_table, dependents)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      contract_end_date, paid_leave_days, memo, tax_table, dependents,
+      bank_name, bank_branch, bank_account_type, bank_account_number, bank_account_name)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(name, name_kana, gender, birth_date || null, address, phone,
     parseInt(hourly_wage) || 1200, hire_date || null, employment_type || 'アルバイト',
     transport_type || 'daily', parseInt(transport_cost_per_day) || 0, parseInt(transport_cost_monthly) || 0,
     contract_end_date || null, parseFloat(paid_leave_days) || 0, memo || null,
-    tax_table || '乙', parseInt(dependents) || 0);
+    tax_table || '乙', parseInt(dependents) || 0,
+    bank_name || null, bank_branch || null, bank_account_type || '普通',
+    bank_account_number || null, bank_account_name || null);
 
   const empId = result.lastInsertRowid;
 
@@ -76,6 +80,7 @@ router.post('/:id', (req, res) => {
   const { name, name_kana, gender, birth_date, address, phone, hourly_wage, hire_date,
           employment_type, transport_type, transport_cost_per_day, transport_cost_monthly,
           contract_end_date, paid_leave_days, memo, tax_table, dependents,
+          bank_name, bank_branch, bank_account_type, bank_account_number, bank_account_name,
           status, login_username, login_password } = req.body;
 
   const employee = req.db.prepare('SELECT hourly_wage FROM employees WHERE id = ?').get(req.params.id);
@@ -84,13 +89,17 @@ router.post('/:id', (req, res) => {
   req.db.prepare(`
     UPDATE employees SET name=?, name_kana=?, gender=?, birth_date=?, address=?, phone=?, hourly_wage=?,
       hire_date=?, employment_type=?, transport_type=?, transport_cost_per_day=?, transport_cost_monthly=?,
-      contract_end_date=?, paid_leave_days=?, memo=?, tax_table=?, dependents=?, status=?
+      contract_end_date=?, paid_leave_days=?, memo=?, tax_table=?, dependents=?,
+      bank_name=?, bank_branch=?, bank_account_type=?, bank_account_number=?, bank_account_name=?,
+      status=?
     WHERE id=?
   `).run(name, name_kana, gender, birth_date || null, address, phone, newWage,
     hire_date || null, employment_type, transport_type || 'daily',
     parseInt(transport_cost_per_day) || 0, parseInt(transport_cost_monthly) || 0,
     contract_end_date || null, parseFloat(paid_leave_days) || 0, memo || null,
     tax_table || '乙', parseInt(dependents) || 0,
+    bank_name || null, bank_branch || null, bank_account_type || '普通',
+    bank_account_number || null, bank_account_name || null,
     status || 'active', req.params.id);
 
   if (employee && employee.hourly_wage !== newWage) {

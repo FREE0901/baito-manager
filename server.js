@@ -38,6 +38,11 @@ migrate('employees', 'contract_end_date', 'TEXT');
 migrate('employees', 'tax_table', "TEXT DEFAULT '乙'");
 migrate('employees', 'dependents', 'INTEGER DEFAULT 0');
 migrate('users', 'must_change_password', 'INTEGER DEFAULT 0');
+migrate('employees', 'bank_name', 'TEXT');
+migrate('employees', 'bank_branch', 'TEXT');
+migrate('employees', 'bank_account_type', "TEXT DEFAULT '普通'");
+migrate('employees', 'bank_account_number', 'TEXT');
+migrate('employees', 'bank_account_name', 'TEXT');
 
 // shift_requests テーブルが無ければ作成
 try { db.prepare('SELECT id FROM shift_requests LIMIT 1').get(); }
