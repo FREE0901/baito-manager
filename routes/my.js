@@ -11,10 +11,10 @@ router.get('/', (req, res) => {
   const todayShift = req.db.prepare("SELECT * FROM shifts WHERE employee_id = ? AND date = ? AND status = 'confirmed'").get(empId, today);
 
   // カレンダー表示用：今月と来月のシフトを取得
-  const now = new Date();
-  const calStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-  const calEnd = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-${String(nextMonth.getDate()).padStart(2, '0')}`;
+  const calNow = new Date();
+  const calStart = `${calNow.getFullYear()}-${String(calNow.getMonth() + 1).padStart(2, '0')}-01`;
+  const calNextEnd = new Date(calNow.getFullYear(), calNow.getMonth() + 2, 0);
+  const calEnd = `${calNextEnd.getFullYear()}-${String(calNextEnd.getMonth() + 1).padStart(2, '0')}-${String(calNextEnd.getDate()).padStart(2, '0')}`;
   const calendarShifts = req.db.prepare(`
     SELECT * FROM shifts WHERE employee_id = ? AND date >= ? AND date <= ? AND status = 'confirmed'
     ORDER BY date, start_time
