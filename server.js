@@ -46,6 +46,12 @@ migrate('employees', 'bank_branch', 'TEXT');
 migrate('employees', 'bank_account_type', "TEXT DEFAULT '普通'");
 migrate('employees', 'bank_account_number', 'TEXT');
 migrate('employees', 'bank_account_name', 'TEXT');
+migrate('employees', 'last_name', 'TEXT');
+migrate('employees', 'first_name', 'TEXT');
+migrate('employees', 'last_name_kana', 'TEXT');
+migrate('employees', 'first_name_kana', 'TEXT');
+migrate('employees', 'postal_code', 'TEXT');
+migrate('shift_requests', 'work_type', "TEXT DEFAULT 'office'");
 
 // shift_requests テーブルが無ければ作成
 try { db.prepare('SELECT id FROM shift_requests LIMIT 1').get(); }

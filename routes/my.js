@@ -77,9 +77,9 @@ router.get('/shift-request', (req, res) => {
 
 router.post('/shift-request', (req, res) => {
   const empId = req.session.user.employee_id;
-  const { date, start_time, end_time, note } = req.body;
-  req.db.prepare('INSERT INTO shift_requests (employee_id, date, start_time, end_time, note) VALUES (?, ?, ?, ?, ?)')
-    .run(empId, date, start_time, end_time, note || null);
+  const { date, start_time, end_time, work_type, note } = req.body;
+  req.db.prepare('INSERT INTO shift_requests (employee_id, date, start_time, end_time, work_type, note) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(empId, date, start_time, end_time, work_type || 'office', note || null);
   res.redirect('/my/shift-request');
 });
 

@@ -11,13 +11,27 @@
     <h2 class="font-bold text-gray-700 mb-3 border-b pb-2">基本情報</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">氏名 <span class="text-red-500">*</span></label>
-        <input type="text" name="name" value="<%= employee ? employee.name : '' %>" required
+        <label class="block text-sm font-medium text-gray-700 mb-1">姓 <span class="text-red-500">*</span></label>
+        <input type="text" name="last_name" value="<%= employee ? employee.last_name || '' : '' %>" required
+          placeholder="例: 田中"
           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">フリガナ</label>
-        <input type="text" name="name_kana" value="<%= employee ? employee.name_kana || '' : '' %>"
+        <label class="block text-sm font-medium text-gray-700 mb-1">名 <span class="text-red-500">*</span></label>
+        <input type="text" name="first_name" value="<%= employee ? employee.first_name || '' : '' %>" required
+          placeholder="例: 太郎"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">セイ（カナ）</label>
+        <input type="text" name="last_name_kana" value="<%= employee ? employee.last_name_kana || '' : '' %>"
+          placeholder="例: タナカ"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">メイ（カナ）</label>
+        <input type="text" name="first_name_kana" value="<%= employee ? employee.first_name_kana || '' : '' %>"
+          placeholder="例: タロウ"
           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
       </div>
       <div>
@@ -34,9 +48,16 @@
         <input type="date" name="birth_date" value="<%= employee ? employee.birth_date || '' : '' %>"
           class="w-full border border-gray-300 rounded-lg px-3 py-2">
       </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">郵便番号</label>
+        <input type="text" name="postal_code" value="<%= employee ? employee.postal_code || '' : '' %>"
+          placeholder="例: 478-0046" maxlength="8" id="postal-code"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+      </div>
       <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700 mb-1">住所</label>
         <input type="text" name="address" value="<%= employee ? employee.address || '' : '' %>"
+          id="address-field"
           class="w-full border border-gray-300 rounded-lg px-3 py-2">
       </div>
       <div>

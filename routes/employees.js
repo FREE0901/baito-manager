@@ -16,19 +16,27 @@ router.get('/new', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, name_kana, gender, birth_date, address, phone, hourly_wage, hire_date,
+  const { last_name, first_name, last_name_kana, first_name_kana,
+          gender, birth_date, postal_code, address, phone, hourly_wage, hire_date,
           employment_type, transport_type, transport_cost_per_day, transport_cost_monthly,
           contract_end_date, paid_leave_days, memo, tax_table, dependents,
           bank_name, bank_branch, bank_account_type, bank_account_number, bank_account_name,
           login_username, login_password } = req.body;
 
+  // 姓名を結合してnameカラムも維持（後方互換）
+  const fullName = [last_name, first_name].filter(Boolean).join(' ') || '（未設定）';
+  const fullNameKana = [last_name_kana, first_name_kana].filter(Boolean).join(' ');
+
   const result = req.db.prepare(`
-    INSERT INTO employees (name, name_kana, gender, birth_date, address, phone, hourly_wage, hire_date,
+    INSERT INTO employees (name, name_kana, last_name, first_name, last_name_kana, first_name_kana,
+      gender, birth_date, postal_code, address, phone, hourly_wage, hire_date,
       employment_type, transport_type, transport_cost_per_day, transport_cost_monthly,
       contract_end_date, paid_leave_days, memo, tax_table, dependents,
       bank_name, bank_branch, bank_account_type, bank_account_number, bank_account_name)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(name, name_kana, gender, birth_date || null, address, phone,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(fullName, fullNameKana, last_name || null, first_name || null,
+    last_name_kana || null, first_name_kana || null,
+    gender, birth_date || null, postal_code || null, address, phone,
     parseInt(hourly_wage) || 1200, hire_date || null, employment_type || 'アルバイト',
     transport_type || 'daily', parseInt(transport_cost_per_day) || 0, parseInt(transport_cost_monthly) || 0,
     contract_end_date || null, parseFloat(paid_leave_days) || 0, memo || null,
@@ -77,7 +85,8 @@ router.post('/:id/deduction/:did/delete', (req, res) => {
 });
 
 router.post('/:id', (req, res) => {
-  const { name, name_kana, gender, birth_date, address, phone, hourly_wage, hire_date,
+  const { last_name, first_name, last_name_kana, first_name_kana,
+          gender, birth_date, postal_code, address, phone, hourly_wage, hire_date,
           employment_type, transport_type, transport_cost_per_day, transport_cost_monthly,
           contract_end_date, paid_leave_days, memo, tax_table, dependents,
           bank_name, bank_branch, bank_account_type, bank_account_number, bank_account_name,
@@ -85,15 +94,21 @@ router.post('/:id', (req, res) => {
 
   const employee = req.db.prepare('SELECT hourly_wage FROM employees WHERE id = ?').get(req.params.id);
   const newWage = parseInt(hourly_wage) || 1200;
+  const fullName = [last_name, first_name].filter(Boolean).join(' ') || '（未設定）';
+  const fullNameKana = [last_name_kana, first_name_kana].filter(Boolean).join(' ');
 
   req.db.prepare(`
-    UPDATE employees SET name=?, name_kana=?, gender=?, birth_date=?, address=?, phone=?, hourly_wage=?,
+    UPDATE employees SET
+      name=?, name_kana=?, last_name=?, first_name=?, last_name_kana=?, first_name_kana=?,
+      gender=?, birth_date=?, postal_code=?, address=?, phone=?, hourly_wage=?,
       hire_date=?, employment_type=?, transport_type=?, transport_cost_per_day=?, transport_cost_monthly=?,
       contract_end_date=?, paid_leave_days=?, memo=?, tax_table=?, dependents=?,
       bank_name=?, bank_branch=?, bank_account_type=?, bank_account_number=?, bank_account_name=?,
       status=?
     WHERE id=?
-  `).run(name, name_kana, gender, birth_date || null, address, phone, newWage,
+  `).run(fullName, fullNameKana, last_name || null, first_name || null,
+    last_name_kana || null, first_name_kana || null,
+    gender, birth_date || null, postal_code || null, address, phone, newWage,
     hire_date || null, employment_type, transport_type || 'daily',
     parseInt(transport_cost_per_day) || 0, parseInt(transport_cost_monthly) || 0,
     contract_end_date || null, parseFloat(paid_leave_days) || 0, memo || null,
