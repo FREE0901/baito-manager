@@ -12,6 +12,13 @@ router.post('/', (req, res) => {
   res.redirect('/announcements');
 });
 
+router.post('/:id/edit', (req, res) => {
+  const { title, content } = req.body;
+  req.db.prepare("UPDATE announcements SET title=?, content=?, updated_at=datetime('now','localtime') WHERE id=?")
+    .run(title, content || '', req.params.id);
+  res.redirect('/announcements');
+});
+
 router.post('/:id/delete', (req, res) => {
   req.db.prepare('DELETE FROM announcements WHERE id = ?').run(req.params.id);
   res.redirect('/announcements');

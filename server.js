@@ -52,6 +52,7 @@ migrate('employees', 'last_name_kana', 'TEXT');
 migrate('employees', 'first_name_kana', 'TEXT');
 migrate('employees', 'postal_code', 'TEXT');
 migrate('shift_requests', 'work_type', "TEXT DEFAULT 'office'");
+migrate('announcements', 'updated_at', 'TEXT');
 
 // shift_requests テーブルが無ければ作成
 try { db.prepare('SELECT id FROM shift_requests LIMIT 1').get(); }
@@ -100,6 +101,16 @@ ensureTable('work_reports', `CREATE TABLE IF NOT EXISTS work_reports (
 ensureTable('employee_default_deductions', `CREATE TABLE IF NOT EXISTS employee_default_deductions (
   id INTEGER PRIMARY KEY AUTOINCREMENT, employee_id INTEGER NOT NULL,
   name TEXT NOT NULL, amount INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+)`);
+ensureTable('employee_documents', `CREATE TABLE IF NOT EXISTS employee_documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  employee_id INTEGER NOT NULL,
+  document_type TEXT NOT NULL DEFAULT 'その他',
+  original_name TEXT NOT NULL,
+  stored_name TEXT NOT NULL,
+  note TEXT,
+  uploaded_at TEXT DEFAULT (datetime('now', 'localtime')),
   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 )`);
 ensureTable('payroll_deductions', `CREATE TABLE IF NOT EXISTS payroll_deductions (
@@ -202,6 +213,7 @@ app.use('/leaves', requireAdmin, require('./routes/leaves'));
 app.use('/tasks', requireAdmin, require('./routes/tasks'));
 app.use('/reports', requireAdmin, require('./routes/reports'));
 app.use('/export', requireAdmin, require('./routes/export'));
+app.use('/employees/:empId/documents', requireAdmin, require('./routes/documents'));
 
 // バイト用ルート
 app.use('/my', requireEmployee, require('./routes/my'));

@@ -280,6 +280,84 @@
 </div>
 <% } %>
 
+<% if (employee) { %>
+<div class="bg-white rounded-xl shadow p-6 max-w-2xl mt-6" id="documents">
+  <h2 class="font-bold text-gray-700 mb-1">書類管理</h2>
+  <p class="text-xs text-gray-500 mb-4">雇用契約書・マイナンバー・健康診断書などを従業員ごとに管理できます</p>
+
+  <!-- アップロードフォーム -->
+  <form method="POST" action="/employees/<%= employee.id %>/documents" enctype="multipart/form-data"
+    class="bg-gray-50 rounded-lg p-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+      <div>
+        <label class="text-xs text-gray-600 block mb-1">書類種別</label>
+        <select name="document_type" class="w-full border rounded px-2 py-1.5 text-sm">
+          <option value="雇用契約書">雇用契約書</option>
+          <option value="マイナンバー">マイナンバー</option>
+          <option value="健康診断書">健康診断書</option>
+          <option value="身分証明書">身分証明書</option>
+          <option value="扶養控除等申告書">扶養控除等申告書</option>
+          <option value="誓約書">誓約書</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-600 block mb-1">ファイル（PDF・画像・Word・Excel）</label>
+        <input type="file" name="file" required accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx"
+          class="w-full text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-gray-600 block mb-1">メモ（任意）</label>
+        <input type="text" name="note" placeholder="例: 2026年4月版" class="w-full border rounded px-2 py-1.5 text-sm">
+      </div>
+    </div>
+    <button type="submit" class="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-700">アップロード</button>
+    <span class="text-xs text-gray-400 ml-2">最大20MB</span>
+  </form>
+
+  <!-- 書類一覧 -->
+  <% if (documents && documents.length > 0) { %>
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b">
+        <tr>
+          <th class="px-2 py-2 text-left text-gray-600 text-xs">種別</th>
+          <th class="px-2 py-2 text-left text-gray-600 text-xs">ファイル名</th>
+          <th class="px-2 py-2 text-left text-gray-600 text-xs">メモ</th>
+          <th class="px-2 py-2 text-left text-gray-600 text-xs">登録日</th>
+          <th class="px-2 py-2 text-xs"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% documents.forEach(doc => { %>
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-2 py-2">
+              <span class="bg-indigo-100 text-indigo-700 text-xs px-1.5 py-0.5 rounded"><%= doc.document_type %></span>
+            </td>
+            <td class="px-2 py-2">
+              <a href="/employees/<%= employee.id %>/documents/<%= doc.id %>/download"
+                class="text-indigo-600 hover:underline text-xs truncate block max-w-[150px]"
+                title="<%= doc.original_name %>">
+                📄 <%= doc.original_name %>
+              </a>
+            </td>
+            <td class="px-2 py-2 text-gray-400 text-xs"><%= doc.note || '-' %></td>
+            <td class="px-2 py-2 text-gray-400 text-xs"><%= doc.uploaded_at.slice(0, 10) %></td>
+            <td class="px-2 py-2 text-right">
+              <form method="POST" action="/employees/<%= employee.id %>/documents/<%= doc.id %>/delete"
+                onsubmit="return confirm('この書類を削除しますか？')">
+                <button type="submit" class="text-red-400 hover:text-red-600 text-xs">削除</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <p class="text-gray-400 text-sm text-center py-4">書類はまだアップロードされていません</p>
+  <% } %>
+</div>
+<% } %>
+
 <% if (employee && wageHistory.length > 0) { %>
 <div class="bg-white rounded-xl shadow p-6 max-w-2xl mt-6">
   <h2 class="font-bold text-gray-700 mb-3">昇給履歴</h2>

@@ -33,21 +33,60 @@
   <% } %>
   <% announcements.forEach(a => { %>
     <div class="bg-white rounded-xl shadow p-6">
-      <div class="flex items-start justify-between">
-        <div class="flex-1 min-w-0">
-          <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= a.title %></h3>
-          <p class="text-xs text-gray-400 mb-3"><%= a.created_at %></p>
-          <% if (a.content) { %>
-            <p class="text-sm text-gray-600 whitespace-pre-wrap"><%= a.content %></p>
-          <% } %>
+      <!-- 表示モード -->
+      <div id="view-<%= a.id %>">
+        <div class="flex items-start justify-between">
+          <div class="flex-1 min-w-0">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= a.title %></h3>
+            <p class="text-xs text-gray-400 mb-3">
+              投稿: <%= a.created_at %>
+              <% if (a.updated_at) { %><span class="ml-2">（編集済: <%= a.updated_at %>）</span><% } %>
+            </p>
+            <% if (a.content) { %>
+              <p class="text-sm text-gray-600 whitespace-pre-wrap"><%= a.content %></p>
+            <% } %>
+          </div>
+          <div class="ml-4 flex-shrink-0 flex gap-3">
+            <button onclick="showEdit(<%= a.id %>)" class="text-indigo-500 hover:text-indigo-700 text-sm">編集</button>
+            <form method="POST" action="/announcements/<%= a.id %>/delete"
+              onsubmit="return confirm('このお知らせを削除しますか？')">
+              <button type="submit" class="text-red-500 hover:text-red-700 text-sm">削除</button>
+            </form>
+          </div>
         </div>
-        <form method="POST" action="/announcements/<%= a.id %>/delete" class="ml-4 flex-shrink-0"
-          onsubmit="return confirm('このお知らせを削除しますか？')">
-          <button type="submit" class="text-red-500 hover:text-red-700 text-sm">削除</button>
+      </div>
+      <!-- 編集モード（初期非表示） -->
+      <div id="edit-<%= a.id %>" style="display:none">
+        <form method="POST" action="/announcements/<%= a.id %>/edit">
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-600 mb-1">タイトル</label>
+            <input type="text" name="title" value="<%= a.title %>" required
+              class="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-600 mb-1">内容</label>
+            <textarea name="content" rows="4"
+              class="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500"><%= a.content || '' %></textarea>
+          </div>
+          <div class="flex gap-2">
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-indigo-700">保存</button>
+            <button type="button" onclick="hideEdit(<%= a.id %>)" class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-300">キャンセル</button>
+          </div>
         </form>
       </div>
     </div>
   <% }) %>
+
+<script>
+function showEdit(id) {
+  document.getElementById('view-' + id).style.display = 'none';
+  document.getElementById('edit-' + id).style.display = 'block';
+}
+function hideEdit(id) {
+  document.getElementById('edit-' + id).style.display = 'none';
+  document.getElementById('view-' + id).style.display = 'block';
+}
+</script>
 </div>
 
 <%- include('../footer') %>

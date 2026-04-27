@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/new', (req, res) => {
-  res.render('employees/form', { employee: null, wageHistory: [], loginUsername: null, defaultDeductions: [] });
+  res.render('employees/form', { employee: null, wageHistory: [], loginUsername: null, defaultDeductions: [], documents: [] });
 });
 
 router.post('/', (req, res) => {
@@ -65,7 +65,8 @@ router.get('/:id/edit', (req, res) => {
   const wageHistory = req.db.prepare('SELECT * FROM wage_history WHERE employee_id = ? ORDER BY effective_date DESC').all(req.params.id);
   const userRow = req.db.prepare("SELECT username FROM users WHERE employee_id = ? AND role = 'employee'").get(req.params.id);
   const defaultDeductions = req.db.prepare('SELECT * FROM employee_default_deductions WHERE employee_id = ? ORDER BY id').all(req.params.id);
-  res.render('employees/form', { employee, wageHistory, loginUsername: userRow ? userRow.username : null, defaultDeductions });
+  const documents = req.db.prepare('SELECT * FROM employee_documents WHERE employee_id = ? ORDER BY uploaded_at DESC').all(req.params.id);
+  res.render('employees/form', { employee, wageHistory, loginUsername: userRow ? userRow.username : null, defaultDeductions, documents });
 });
 
 // デフォルト控除の追加

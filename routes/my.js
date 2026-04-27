@@ -235,6 +235,26 @@ router.post('/profile', (req, res) => {
   res.render('my/profile', { employee: updatedEmployee, loginUsername: userRow ? userRow.username : '', error: null, success: '保存しました' });
 });
 
+// --- 書類確認（バイト本人） ---
+router.get('/documents', (req, res) => {
+  const empId = req.session.user.employee_id;
+  const docs = req.db.prepare('SELECT * FROM employee_documents WHERE employee_id = ? ORDER BY uploaded_at DESC').all(empId);
+  res.render('my/documents', { docs });
+});
+
+router.get('/documents/:docId/download', (req, res) => {
+  const empId = req.session.user.employee_id;
+  const path = require('path');
+  const fs = require('fs');
+  const doc = req.db.prepare('SELECT * FROM employee_documents WHERE id = ? AND employee_id = ?')
+    .get(req.params.docId, empId);
+  if (!doc) return res.status(404).send('書類が見つかりません');
+  const uploadDir = fs.existsSync('/app/data') ? '/app/data/uploads' : path.join(__dirname, '../data/uploads');
+  const filePath = path.join(uploadDir, doc.stored_name);
+  if (!fs.existsSync(filePath)) return res.status(404).send('ファイルが見つかりません');
+  res.download(filePath, doc.original_name);
+});
+
 // --- 給与明細 ---
 router.get('/payroll', (req, res) => {
   const empId = req.session.user.employee_id;
