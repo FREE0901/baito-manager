@@ -103,6 +103,15 @@ ensureTable('employee_default_deductions', `CREATE TABLE IF NOT EXISTS employee_
   name TEXT NOT NULL, amount INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 )`);
+ensureTable('announcement_reads', `CREATE TABLE IF NOT EXISTS announcement_reads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  announcement_id INTEGER NOT NULL,
+  employee_id INTEGER NOT NULL,
+  read_at TEXT DEFAULT (datetime('now', 'localtime')),
+  UNIQUE(announcement_id, employee_id),
+  FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+)`);
 ensureTable('employee_documents', `CREATE TABLE IF NOT EXISTS employee_documents (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   employee_id INTEGER NOT NULL,

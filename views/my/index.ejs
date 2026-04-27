@@ -62,14 +62,34 @@
 <% if (announcements.length > 0) { %>
 <div class="bg-white rounded-xl shadow p-5 mb-6">
   <h2 class="font-bold text-gray-700 mb-3">お知らせ</h2>
-  <ul class="space-y-2">
+  <ul class="space-y-3">
     <% announcements.forEach(a => { %>
-      <li class="border-b pb-2">
-        <div class="flex justify-between items-start">
-          <span class="font-medium text-sm"><%= a.title %></span>
-          <span class="text-xs text-gray-400"><%= a.created_at %></span>
+      <% const isRead = readIds.has(a.id); %>
+      <li class="border-b pb-3 last:border-b-0 last:pb-0 <%= isRead ? 'opacity-60' : '' %>">
+        <div class="flex justify-between items-start gap-2">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-0.5">
+              <% if (!isRead) { %>
+                <span class="inline-block w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+              <% } %>
+              <span class="font-medium text-sm"><%= a.title %></span>
+            </div>
+            <p class="text-xs text-gray-400 mb-1"><%= a.created_at.slice(0,10) %></p>
+            <% if (a.content) { %><p class="text-sm text-gray-600" style="white-space: pre-wrap;"><%= a.content %></p><% } %>
+          </div>
+          <div class="flex-shrink-0">
+            <% if (isRead) { %>
+              <span class="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">✓ 確認済み</span>
+            <% } else { %>
+              <form method="POST" action="/my/announcement/<%= a.id %>/read">
+                <button type="submit"
+                  class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm transition-colors">
+                  👀 見た！
+                </button>
+              </form>
+            <% } %>
+          </div>
         </div>
-        <% if (a.content) { %><p class="text-sm text-gray-600 mt-1" style="white-space: pre-wrap;"><%= a.content %></p><% } %>
       </li>
     <% }) %>
   </ul>

@@ -34,8 +34,11 @@ router.get('/', (req, res) => {
   // 今日の出退勤
   const todayAttendance = req.db.prepare('SELECT * FROM attendance WHERE employee_id = ? AND date = ?').get(empId, today);
 
-  // お知らせ（最新5件）
+  // お知らせ（最新5件）＋ 既読状態
   const announcements = req.db.prepare('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 5').all();
+  const readIds = new Set(
+    req.db.prepare('SELECT announcement_id FROM announcement_reads WHERE employee_id = ?').all(empId).map(r => r.announcement_id)
+  );
 
   // 担当タスク（未完了）
   const myTasks = req.db.prepare("SELECT * FROM tasks WHERE (employee_id = ? OR employee_id IS NULL) AND status != 'completed' ORDER BY priority DESC, due_date").all(empId);
@@ -44,7 +47,7 @@ router.get('/', (req, res) => {
   const usedLeaves = req.db.prepare("SELECT COUNT(*) as cnt FROM paid_leaves WHERE employee_id = ? AND status = 'approved'").get(empId);
   const leaveRemaining = (employee.paid_leave_days || 0) - (usedLeaves.cnt || 0);
 
-  res.render('my/index', { employee, todayShift, calendarShifts, pendingRequests, monthAttendance, today, todayAttendance, announcements, myTasks, leaveRemaining });
+  res.render('my/index', { employee, todayShift, calendarShifts, pendingRequests, monthAttendance, today, todayAttendance, announcements, readIds, myTasks, leaveRemaining });
 });
 
 // --- 打刻 ---
@@ -190,6 +193,15 @@ router.post('/leave/:id/cancel', (req, res) => {
   const empId = req.session.user.employee_id;
   req.db.prepare("DELETE FROM paid_leaves WHERE id = ? AND employee_id = ? AND status = 'pending'").run(req.params.id, empId);
   res.redirect('/my/leave');
+});
+
+// --- お知らせ既読 ---
+router.post('/announcement/:id/read', (req, res) => {
+  const empId = req.session.user.employee_id;
+  req.db.prepare(`
+    INSERT OR IGNORE INTO announcement_reads (announcement_id, employee_id) VALUES (?, ?)
+  `).run(req.params.id, empId);
+  res.redirect('/my');
 });
 
 // --- プロフィール編集 ---

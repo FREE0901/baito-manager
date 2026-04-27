@@ -38,13 +38,23 @@
         <div class="flex items-start justify-between">
           <div class="flex-1 min-w-0">
             <h3 class="text-lg font-semibold text-gray-800 mb-1"><%= a.title %></h3>
-            <p class="text-xs text-gray-400 mb-3">
+            <p class="text-xs text-gray-400 mb-2">
               投稿: <%= a.created_at %>
               <% if (a.updated_at) { %><span class="ml-2">（編集済: <%= a.updated_at %>）</span><% } %>
             </p>
             <% if (a.content) { %>
-              <p class="text-sm text-gray-600 whitespace-pre-wrap"><%= a.content %></p>
+              <p class="text-sm text-gray-600 whitespace-pre-wrap mb-3"><%= a.content %></p>
             <% } %>
+            <!-- 既読状況 -->
+            <% const readers = readMap[a.id] || []; %>
+            <div class="flex items-center gap-2 flex-wrap mt-1">
+              <span class="text-xs font-medium <%= readers.length > 0 && readers.length >= totalEmployees ? 'text-green-600' : 'text-orange-500' %>">
+                👀 <%= readers.length %> / <%= totalEmployees %>人 確認済み
+              </span>
+              <% readers.forEach(r => { %>
+                <span class="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full"><%= r.name %></span>
+              <% }) %>
+            </div>
           </div>
           <div class="ml-4 flex-shrink-0 flex gap-3">
             <button onclick="showEdit(<%= a.id %>)" class="text-indigo-500 hover:text-indigo-700 text-sm">編集</button>
