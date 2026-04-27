@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 
 // バイト用ダッシュボード
 router.get('/', (req, res) => {
@@ -9,10 +10,15 @@ router.get('/', (req, res) => {
 
   const todayShift = req.db.prepare("SELECT * FROM shifts WHERE employee_id = ? AND date = ? AND status = 'confirmed'").get(empId, today);
 
-  const upcomingShifts = req.db.prepare(`
-    SELECT * FROM shifts WHERE employee_id = ? AND date >= ? AND status = 'confirmed'
-    ORDER BY date, start_time LIMIT 7
-  `).all(empId, today);
+  // カレンダー表示用：今月と来月のシフトを取得
+  const now = new Date();
+  const calStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+  const calEnd = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-${String(nextMonth.getDate()).padStart(2, '0')}`;
+  const calendarShifts = req.db.prepare(`
+    SELECT * FROM shifts WHERE employee_id = ? AND date >= ? AND date <= ? AND status = 'confirmed'
+    ORDER BY date, start_time
+  `).all(empId, calStart, calEnd);
 
   const pendingRequests = req.db.prepare("SELECT * FROM shift_requests WHERE employee_id = ? AND status = 'pending' ORDER BY date").all(empId);
 
@@ -38,7 +44,7 @@ router.get('/', (req, res) => {
   const usedLeaves = req.db.prepare("SELECT COUNT(*) as cnt FROM paid_leaves WHERE employee_id = ? AND status = 'approved'").get(empId);
   const leaveRemaining = (employee.paid_leave_days || 0) - (usedLeaves.cnt || 0);
 
-  res.render('my/index', { employee, todayShift, upcomingShifts, pendingRequests, monthAttendance, today, todayAttendance, announcements, myTasks, leaveRemaining });
+  res.render('my/index', { employee, todayShift, calendarShifts, pendingRequests, monthAttendance, today, todayAttendance, announcements, myTasks, leaveRemaining });
 });
 
 // --- 打刻 ---
@@ -184,6 +190,49 @@ router.post('/leave/:id/cancel', (req, res) => {
   const empId = req.session.user.employee_id;
   req.db.prepare("DELETE FROM paid_leaves WHERE id = ? AND employee_id = ? AND status = 'pending'").run(req.params.id, empId);
   res.redirect('/my/leave');
+});
+
+// --- プロフィール編集 ---
+router.get('/profile', (req, res) => {
+  const empId = req.session.user.employee_id;
+  const employee = req.db.prepare('SELECT * FROM employees WHERE id = ?').get(empId);
+  const userRow = req.db.prepare("SELECT username FROM users WHERE employee_id = ? AND role = 'employee'").get(empId);
+  res.render('my/profile', { employee, loginUsername: userRow ? userRow.username : '', error: null, success: null });
+});
+
+router.post('/profile', (req, res) => {
+  const empId = req.session.user.employee_id;
+  const { last_name, first_name, last_name_kana, first_name_kana, postal_code, address, phone, new_password, new_password_confirm } = req.body;
+  const employee = req.db.prepare('SELECT * FROM employees WHERE id = ?').get(empId);
+  const userRow = req.db.prepare("SELECT * FROM users WHERE employee_id = ? AND role = 'employee'").get(empId);
+
+  // パスワード変更（入力があれば）
+  if (new_password) {
+    if (new_password.length < 8) {
+      return res.render('my/profile', { employee, loginUsername: userRow ? userRow.username : '', error: 'パスワードは8文字以上で設定してください', success: null });
+    }
+    if (new_password !== new_password_confirm) {
+      return res.render('my/profile', { employee, loginUsername: userRow ? userRow.username : '', error: 'パスワードが一致しません', success: null });
+    }
+    if (userRow) {
+      const hash = bcrypt.hashSync(new_password, 10);
+      req.db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hash, userRow.id);
+    }
+  }
+
+  const fullName = [last_name, first_name].filter(Boolean).join(' ') || employee.name;
+  const fullNameKana = [last_name_kana, first_name_kana].filter(Boolean).join(' ');
+
+  req.db.prepare(`
+    UPDATE employees SET
+      last_name=?, first_name=?, last_name_kana=?, first_name_kana=?,
+      name=?, name_kana=?, postal_code=?, address=?, phone=?
+    WHERE id=?
+  `).run(last_name || null, first_name || null, last_name_kana || null, first_name_kana || null,
+    fullName, fullNameKana, postal_code || null, address || null, phone || null, empId);
+
+  const updatedEmployee = req.db.prepare('SELECT * FROM employees WHERE id = ?').get(empId);
+  res.render('my/profile', { employee: updatedEmployee, loginUsername: userRow ? userRow.username : '', error: null, success: '保存しました' });
 });
 
 // --- 給与明細 ---

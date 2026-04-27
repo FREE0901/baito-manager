@@ -115,20 +115,56 @@
 </div>
 <% } %>
 
-<!-- 今後のシフト -->
+<!-- 今後のシフト（カレンダー） -->
+<%
+const calNow = new Date();
+const calYear = calNow.getFullYear();
+const calMonth = calNow.getMonth(); // 0-indexed
+const calTodayStr = today;
+const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const dayNames = ['日','月','火','水','木','金','土'];
+const firstWeekDay = new Date(calYear, calMonth, 1).getDay();
+const daysInCalMonth = new Date(calYear, calMonth + 1, 0).getDate();
+// shiftMap: 'YYYY-MM-DD' → shift
+const shiftMap = {};
+calendarShifts.forEach(s => { shiftMap[s.date] = s; });
+%>
 <div class="bg-white rounded-xl shadow p-5 mb-6">
-  <h2 class="font-bold text-gray-700 mb-3">今後のシフト</h2>
-  <% if (upcomingShifts.length === 0) { %>
-    <p class="text-gray-400 text-sm">予定はありません</p>
-  <% } else { %>
-    <ul class="space-y-2">
-      <% upcomingShifts.forEach(s => { %>
-        <li class="flex justify-between items-center py-2 border-b">
-          <span class="text-sm font-medium"><%= s.date %></span>
-          <span class="text-sm text-gray-500"><%= s.start_time %> - <%= s.end_time %></span>
-        </li>
-      <% }) %>
-    </ul>
+  <h2 class="font-bold text-gray-700 mb-3">今後のシフト（<%= calYear %>年 <%= monthNames[calMonth] %>）</h2>
+  <div class="grid grid-cols-7 gap-1 text-center text-xs mb-1">
+    <% dayNames.forEach((d, i) => { %>
+      <div class="font-bold <%= i===0 ? 'text-red-500' : i===6 ? 'text-blue-500' : 'text-gray-500' %>"><%= d %></div>
+    <% }) %>
+  </div>
+  <div class="grid grid-cols-7 gap-1 text-center text-xs">
+    <%
+    // 1日前の空白セル
+    for (let i = 0; i < firstWeekDay; i++) { %>
+      <div></div>
+    <% } %>
+    <% for (let d = 1; d <= daysInCalMonth; d++) {
+      const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const shift = shiftMap[dateStr];
+      const isToday = dateStr === calTodayStr;
+      const dow = (firstWeekDay + d - 1) % 7;
+      const isPast = dateStr < calTodayStr;
+    %>
+      <div class="rounded-lg py-1 px-0.5 min-h-[52px] flex flex-col items-center justify-start
+        <%= isToday ? 'bg-green-100 ring-2 ring-green-400' : shift ? 'bg-indigo-50' : '' %>
+        <%= isPast && !isToday ? 'opacity-40' : '' %>">
+        <span class="font-medium leading-tight
+          <%= isToday ? 'text-green-700' : dow===0 ? 'text-red-500' : dow===6 ? 'text-blue-500' : 'text-gray-700' %>">
+          <%= d %>
+        </span>
+        <% if (shift) { %>
+          <span class="text-indigo-700 font-bold leading-tight mt-0.5" style="font-size:0.6rem;"><%= shift.start_time.slice(0,5) %></span>
+          <span class="text-indigo-500 leading-tight" style="font-size:0.6rem;">〜<%= shift.end_time.slice(0,5) %></span>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+  <% if (Object.keys(shiftMap).length === 0) { %>
+    <p class="text-gray-400 text-sm mt-3 text-center">今月のシフトはまだ登録されていません</p>
   <% } %>
 </div>
 
@@ -137,6 +173,7 @@
   <a href="/my/attendance" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">出退勤を確認</a>
   <a href="/my/report" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700">業務報告</a>
   <a href="/my/payroll" class="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-700">給与明細</a>
+  <a href="/my/profile" class="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600">プロフィール編集</a>
 </div>
 
 <%- include('footer') %>

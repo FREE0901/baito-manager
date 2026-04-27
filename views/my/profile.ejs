@@ -1,0 +1,88 @@
+<%- include('layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-6">プロフィール編集</h1>
+
+<% if (error) { %>
+  <div class="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm"><%= error %></div>
+<% } %>
+<% if (success) { %>
+  <div class="bg-green-50 text-green-700 p-3 rounded-lg mb-4 text-sm">✓ <%= success %></div>
+<% } %>
+
+<form method="POST" action="/my/profile">
+  <div class="bg-white rounded-xl shadow p-6 mb-4">
+    <h2 class="font-bold text-gray-700 mb-4 border-b pb-2">氏名</h2>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">姓</label>
+        <input type="text" name="last_name" value="<%= employee.last_name || '' %>" required
+          placeholder="田中"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">名</label>
+        <input type="text" name="first_name" value="<%= employee.first_name || '' %>" required
+          placeholder="太郎"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">セイ（カナ）</label>
+        <input type="text" name="last_name_kana" value="<%= employee.last_name_kana || '' %>"
+          placeholder="タナカ"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">メイ（カナ）</label>
+        <input type="text" name="first_name_kana" value="<%= employee.first_name_kana || '' %>"
+          placeholder="タロウ"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+    </div>
+
+    <h2 class="font-bold text-gray-700 mb-4 border-b pb-2">連絡先・住所</h2>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
+        <input type="tel" name="phone" value="<%= employee.phone || '' %>"
+          placeholder="090-0000-0000"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">郵便番号</label>
+        <input type="text" name="postal_code" value="<%= employee.postal_code || '' %>"
+          placeholder="478-0046" maxlength="8"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">住所</label>
+        <input type="text" name="address" value="<%= employee.address || '' %>"
+          placeholder="愛知県知多市..."
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow p-6 mb-4">
+    <h2 class="font-bold text-gray-700 mb-1 border-b pb-2">パスワード変更</h2>
+    <p class="text-xs text-gray-400 mb-4">変更しない場合は空欄のままにしてください</p>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">新しいパスワード（8文字以上）</label>
+        <input type="password" name="new_password" minlength="8"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">新しいパスワード（確認）</label>
+        <input type="password" name="new_password_confirm"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+      </div>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium">保存する</button>
+    <a href="/my" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300">戻る</a>
+  </div>
+</form>
+
+<%- include('footer') %>
