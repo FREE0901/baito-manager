@@ -74,7 +74,13 @@
               <span class="font-medium text-gray-800 truncate"><%= task.title %></span>
             </div>
             <% if (task.description) { %>
-              <p class="text-xs text-gray-500 truncate max-w-xl"><%= task.description %></p>
+              <div class="text-xs text-gray-500 max-w-xl">
+                <p class="desc-short-<%= task.id %> whitespace-pre-wrap line-clamp-2"><%= task.description %></p>
+                <% if (task.description.length > 80) { %>
+                  <button type="button" onclick="toggleDesc(<%= task.id %>)"
+                    class="text-indigo-500 hover:underline mt-0.5" id="desc-btn-<%= task.id %>">もっと見る</button>
+                <% } %>
+              </div>
             <% } %>
           </div>
 
@@ -141,5 +147,19 @@
     </div>
   <% } %>
 </div>
+
+<script>
+function toggleDesc(id) {
+  const p = document.querySelector('.desc-short-' + id);
+  const btn = document.getElementById('desc-btn-' + id);
+  if (p.classList.contains('line-clamp-2')) {
+    p.classList.remove('line-clamp-2');
+    btn.textContent = '閉じる';
+  } else {
+    p.classList.add('line-clamp-2');
+    btn.textContent = 'もっと見る';
+  }
+}
+</script>
 
 <%- include('../footer') %>

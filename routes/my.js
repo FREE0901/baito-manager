@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const { notifyShiftRequest, notifyClockIn } = require('../utils/mailer');
 
 // バイト用ダッシュボード
 router.get('/', (req, res) => {
@@ -47,7 +48,12 @@ router.get('/', (req, res) => {
   const usedLeaves = req.db.prepare("SELECT COUNT(*) as cnt FROM paid_leaves WHERE employee_id = ? AND status = 'approved'").get(empId);
   const leaveRemaining = (employee.paid_leave_days || 0) - (usedLeaves.cnt || 0);
 
-  res.render('my/index', { employee, todayShift, calendarShifts, pendingRequests, monthAttendance, today, todayAttendance, announcements, readIds, myTasks, leaveRemaining });
+  // iCal URL のベースURL（settings.site_url → 環境変数 → リクエストから生成）
+  const baseUrl = (res.locals.settings && res.locals.settings.site_url)
+    || process.env.SITE_URL
+    || `${req.protocol}://${req.get('host')}`;
+
+  res.render('my/index', { employee, todayShift, calendarShifts, pendingRequests, monthAttendance, today, todayAttendance, announcements, readIds, myTasks, leaveRemaining, baseUrl });
 });
 
 // --- 打刻 ---
@@ -61,6 +67,9 @@ router.post('/clock-in', (req, res) => {
   if (!existing) {
     req.db.prepare('INSERT INTO attendance (employee_id, date, clock_in, work_type) VALUES (?, ?, ?, ?)')
       .run(empId, today, nowTime, workType);
+    // メール通知
+    const emp = req.db.prepare('SELECT name FROM employees WHERE id = ?').get(empId);
+    notifyClockIn({ employeeName: emp ? emp.name : `ID:${empId}`, date: today, time: nowTime, workType });
   }
   res.redirect('/my');
 });
@@ -89,6 +98,16 @@ router.post('/shift-request', (req, res) => {
   const { date, start_time, end_time, work_type, note } = req.body;
   req.db.prepare('INSERT INTO shift_requests (employee_id, date, start_time, end_time, work_type, note) VALUES (?, ?, ?, ?, ?, ?)')
     .run(empId, date, start_time, end_time, work_type || 'office', note || null);
+  // メール通知
+  const emp = req.db.prepare('SELECT name FROM employees WHERE id = ?').get(empId);
+  notifyShiftRequest({
+    employeeName: emp ? emp.name : `ID:${empId}`,
+    date,
+    startTime: start_time,
+    endTime: end_time,
+    workType: work_type || 'office',
+    note: note || '',
+  });
   res.redirect('/my/shift-request');
 });
 

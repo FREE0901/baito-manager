@@ -132,6 +132,16 @@ ensureTable('payroll_deductions', `CREATE TABLE IF NOT EXISTS payroll_deductions
 migrate('tasks', 'original_due_date', 'TEXT');
 migrate('tasks', 'carried_count', 'INTEGER DEFAULT 0');
 
+// iCal購読トークン
+migrate('employees', 'calendar_token', 'TEXT');
+// 既存従業員にトークンが未設定の場合は生成
+const crypto = require('crypto');
+const empsWithoutToken = db.prepare("SELECT id FROM employees WHERE calendar_token IS NULL").all();
+empsWithoutToken.forEach(emp => {
+  const token = crypto.randomBytes(20).toString('hex');
+  db.prepare("UPDATE employees SET calendar_token = ? WHERE id = ?").run(token, emp.id);
+});
+
 // 初期管理者アカウント作成（初回のみ）
 const adminExists = db.prepare('SELECT id FROM users WHERE username = ?').get('admin');
 if (!adminExists) {
@@ -226,6 +236,9 @@ app.use('/employees/:empId/documents', requireAdmin, require('./routes/documents
 
 // バイト用ルート
 app.use('/my', requireEmployee, require('./routes/my'));
+
+// iCalフィード（認証不要・公開URL）
+app.use('/calendar', require('./routes/calendar'));
 
 
 app.get('/', (req, res) => {

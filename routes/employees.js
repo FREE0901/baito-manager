@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 router.get('/', (req, res) => {
   const employees = req.db.prepare(`
@@ -45,6 +46,10 @@ router.post('/', (req, res) => {
     bank_account_number || null, bank_account_name || null);
 
   const empId = result.lastInsertRowid;
+
+  // iCal購読トークンを生成
+  const calToken = crypto.randomBytes(20).toString('hex');
+  req.db.prepare("UPDATE employees SET calendar_token = ? WHERE id = ?").run(calToken, empId);
 
   req.db.prepare('INSERT INTO wage_history (employee_id, hourly_wage, effective_date, reason) VALUES (?, ?, ?, ?)')
     .run(empId, parseInt(hourly_wage) || 1200, hire_date || new Date().toISOString().split('T')[0], '入社時');

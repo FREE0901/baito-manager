@@ -196,4 +196,36 @@ calendarShifts.forEach(s => { shiftMap[s.date] = s; });
   <a href="/my/profile" class="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600">プロフィール編集</a>
 </div>
 
+<!-- Googleカレンダー連携 -->
+<% if (employee.calendar_token) { %>
+<div class="bg-white rounded-xl shadow p-5 mt-4">
+  <h2 class="font-bold text-gray-700 mb-2">📅 Googleカレンダーと連携</h2>
+  <p class="text-xs text-gray-500 mb-3">下のURLをGoogleカレンダーに登録すると、確定したシフトが自動で表示されます。</p>
+  <div class="flex flex-col sm:flex-row items-start gap-2">
+    <% const calUrl = baseUrl + '/calendar/' + employee.calendar_token + '.ics'; %>
+    <input type="text" readonly value="<%= calUrl %>"
+      id="cal-url-input"
+      class="flex-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 bg-gray-50 select-all">
+    <button onclick="copyCalUrl()" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-xs hover:bg-gray-300 whitespace-nowrap">コピー</button>
+    <% const webcalUrl = calUrl.replace(/^https?:\/\//, 'webcal://'); %>
+    <% const gcUrl = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(webcalUrl); %>
+    <a href="<%= gcUrl %>" target="_blank" rel="noopener"
+      class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-blue-700 whitespace-nowrap">Googleカレンダーに追加</a>
+  </div>
+  <p class="text-xs text-gray-400 mt-2">※ 追加後、自動更新は数時間ごとです（Googleの仕様）。シフト変更後に即反映させたい場合は手動更新してください。</p>
+</div>
+<script>
+function copyCalUrl() {
+  const input = document.getElementById('cal-url-input');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(() => {
+    alert('URLをコピーしました');
+  }).catch(() => {
+    document.execCommand('copy');
+    alert('URLをコピーしました');
+  });
+}
+</script>
+<% } %>
+
 <%- include('footer') %>
