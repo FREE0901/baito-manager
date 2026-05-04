@@ -141,6 +141,12 @@ empsWithoutToken.forEach(emp => {
   const token = crypto.randomBytes(20).toString('hex');
   db.prepare("UPDATE employees SET calendar_token = ? WHERE id = ?").run(token, emp.id);
 });
+// 管理者用の全スタッフ統合iCalトークンを settings に保存（未設定時のみ生成）
+const adminCalTokenRow = db.prepare("SELECT value FROM settings WHERE key = 'admin_calendar_token'").get();
+if (!adminCalTokenRow) {
+  const adminCalToken = crypto.randomBytes(24).toString('hex');
+  db.prepare("INSERT INTO settings (key, value) VALUES ('admin_calendar_token', ?)").run(adminCalToken);
+}
 
 // 初期管理者アカウント作成（初回のみ）
 const adminExists = db.prepare('SELECT id FROM users WHERE username = ?').get('admin');

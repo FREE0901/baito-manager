@@ -9,7 +9,10 @@ router.get('/', (req, res) => {
     LEFT JOIN users u ON u.employee_id = e.id AND u.role = 'employee'
     ORDER BY e.status, e.name
   `).all();
-  res.render('employees/index', { employees });
+  const baseUrl = (res.locals.settings && res.locals.settings.site_url)
+    || process.env.SITE_URL
+    || `${req.protocol}://${req.get('host')}`;
+  res.render('employees/index', { employees, baseUrl });
 });
 
 router.get('/new', (req, res) => {

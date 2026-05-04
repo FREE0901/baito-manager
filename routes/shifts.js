@@ -30,7 +30,16 @@ router.get('/', (req, res) => {
     WHERE sr.status = 'pending' ORDER BY sr.date, sr.start_time
   `).all();
 
-  res.render('shifts/index', { employees, calendar, year, month, firstDow, pendingRequests });
+  // 管理者用iCalトークン
+  const adminCalTokenRow = req.db.prepare("SELECT value FROM settings WHERE key = 'admin_calendar_token'").get();
+  const adminCalendarToken = adminCalTokenRow ? adminCalTokenRow.value : null;
+
+  // ベースURL
+  const baseUrl = (res.locals.settings && res.locals.settings.site_url)
+    || process.env.SITE_URL
+    || `${req.protocol}://${req.get('host')}`;
+
+  res.render('shifts/index', { employees, calendar, year, month, firstDow, pendingRequests, adminCalendarToken, baseUrl });
 });
 
 router.post('/', (req, res) => {

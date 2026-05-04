@@ -43,7 +43,14 @@
               <% if (a.updated_at) { %><span class="ml-2">（編集済: <%= a.updated_at %>）</span><% } %>
             </p>
             <% if (a.content) { %>
-              <p class="text-sm text-gray-600 whitespace-pre-wrap mb-3"><%= a.content %></p>
+              <div class="mb-3">
+                <p class="text-sm text-gray-600 whitespace-pre-wrap ann-short-<%= a.id %> line-clamp-3"><%= a.content %></p>
+                <% if (a.content.length > 100) { %>
+                  <button type="button" onclick="toggleAnn(<%= a.id %>)"
+                    id="ann-btn-<%= a.id %>"
+                    class="text-indigo-500 hover:underline text-xs mt-0.5">もっと見る</button>
+                <% } %>
+              </div>
             <% } %>
             <!-- 既読状況 -->
             <% const readers = readMap[a.id] || []; %>
@@ -95,6 +102,17 @@ function showEdit(id) {
 function hideEdit(id) {
   document.getElementById('edit-' + id).style.display = 'none';
   document.getElementById('view-' + id).style.display = 'block';
+}
+function toggleAnn(id) {
+  const p = document.querySelector('.ann-short-' + id);
+  const btn = document.getElementById('ann-btn-' + id);
+  if (p.classList.contains('line-clamp-3')) {
+    p.classList.remove('line-clamp-3');
+    btn.textContent = '閉じる';
+  } else {
+    p.classList.add('line-clamp-3');
+    btn.textContent = 'もっと見る';
+  }
 }
 </script>
 </div>
