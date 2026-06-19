@@ -1,7 +1,0 @@
-node_modules/
-db/database.sqlite
-db/database.sqlite-shm
-db/database.sqlite-wal
-.env
-*.env.local
-data/

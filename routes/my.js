@@ -3,19 +3,30 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { notifyShiftRequest, notifyClockIn } = require('../utils/mailer');
 
+// JST（UTC+9）の現在日時を返すヘルパー
+function jstNow() {
+  const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return {
+    date: d.toISOString().split('T')[0],   // YYYY-MM-DD
+    time: d.toISOString().slice(11, 16),   // HH:MM
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth(),                // 0-indexed
+  };
+}
+
 // バイト用ダッシュボード
 router.get('/', (req, res) => {
   const empId = req.session.user.employee_id;
   const employee = req.db.prepare('SELECT * FROM employees WHERE id = ?').get(empId);
-  const today = new Date().toISOString().split('T')[0];
+  const jst = jstNow();
+  const today = jst.date;
 
   const todayShift = req.db.prepare("SELECT * FROM shifts WHERE employee_id = ? AND date = ? AND status = 'confirmed'").get(empId, today);
 
-  // カレンダー表示用：今月と来月のシフトを取得
-  const calNow = new Date();
-  const calStart = `${calNow.getFullYear()}-${String(calNow.getMonth() + 1).padStart(2, '0')}-01`;
-  const calNextEnd = new Date(calNow.getFullYear(), calNow.getMonth() + 2, 0);
-  const calEnd = `${calNextEnd.getFullYear()}-${String(calNextEnd.getMonth() + 1).padStart(2, '0')}-${String(calNextEnd.getDate()).padStart(2, '0')}`;
+  // カレンダー表示用：今月と来月のシフトを取得（JST基準）
+  const calStart = `${jst.year}-${String(jst.month + 1).padStart(2, '0')}-01`;
+  const calNextEnd = new Date(Date.UTC(jst.year, jst.month + 2, 0));
+  const calEnd = calNextEnd.toISOString().split('T')[0];
   const calendarShifts = req.db.prepare(`
     SELECT * FROM shifts WHERE employee_id = ? AND date >= ? AND date <= ? AND status = 'confirmed'
     ORDER BY date, start_time
@@ -23,8 +34,7 @@ router.get('/', (req, res) => {
 
   const pendingRequests = req.db.prepare("SELECT * FROM shift_requests WHERE employee_id = ? AND status = 'pending' ORDER BY date").all(empId);
 
-  const now = new Date();
-  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthStr = `${jst.year}-${String(jst.month + 1).padStart(2, '0')}`;
   const monthAttendance = req.db.prepare(`
     SELECT COUNT(*) as days,
       SUM(CASE WHEN clock_in IS NOT NULL AND clock_out IS NOT NULL
@@ -59,8 +69,7 @@ router.get('/', (req, res) => {
 // --- 打刻 ---
 router.post('/clock-in', (req, res) => {
   const empId = req.session.user.employee_id;
-  const today = new Date().toISOString().split('T')[0];
-  const nowTime = new Date().toTimeString().slice(0, 5);
+  const { date: today, time: nowTime } = jstNow();
   const workType = req.body.work_type || 'office';
 
   const existing = req.db.prepare('SELECT * FROM attendance WHERE employee_id = ? AND date = ?').get(empId, today);
@@ -76,8 +85,7 @@ router.post('/clock-in', (req, res) => {
 
 router.post('/clock-out', (req, res) => {
   const empId = req.session.user.employee_id;
-  const today = new Date().toISOString().split('T')[0];
-  const nowTime = new Date().toTimeString().slice(0, 5);
+  const { date: today, time: nowTime } = jstNow();
   const breakMin = parseInt(req.body.break_minutes) || 0;
   const workType = req.body.work_type || 'office';
 
@@ -164,8 +172,8 @@ router.post('/tasks/:id/carry-over', (req, res) => {
   const task = req.db.prepare('SELECT * FROM tasks WHERE id = ? AND (employee_id = ? OR employee_id IS NULL)').get(req.params.id, empId);
   if (task) {
     const newDate = req.body.new_due_date || (() => {
-      const d = new Date();
-      d.setDate(d.getDate() + 1);
+      const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
+      d.setUTCDate(d.getUTCDate() + 1);
       return d.toISOString().split('T')[0];
     })();
     const originalDate = task.original_due_date || task.due_date;
@@ -179,7 +187,7 @@ router.post('/tasks/:id/carry-over', (req, res) => {
 // --- 業務報告 ---
 router.get('/report', (req, res) => {
   const empId = req.session.user.employee_id;
-  const today = new Date().toISOString().split('T')[0];
+  const today = jstNow().date;
   const reports = req.db.prepare('SELECT * FROM work_reports WHERE employee_id = ? ORDER BY date DESC LIMIT 30').all(empId);
   res.render('my/report', { reports, today });
 });

@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
+// JST（UTC+9）の現在日時を返すヘルパー
+function jstNow() {
+  const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return { date: d.toISOString().split('T')[0], year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
+}
+
 router.get('/', (req, res) => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const today = now.toISOString().split('T')[0];
+  const { date: today, year, month } = jstNow();
   const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
   const monthEnd = `${year}-${String(month).padStart(2, '0')}-31`;
 
