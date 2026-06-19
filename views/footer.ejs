@@ -1,0 +1,30 @@
+  </main>
+  <script>
+    // ハンバーガーメニュー
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (hamburger && mobileMenu) {
+      hamburger.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+    }
+
+    // 「その他」ドロップダウン（クリック開閉、外クリックで閉じる）
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdown-menu');
+      const arrow = document.getElementById('dropdown-arrow');
+      if (!menu) return;
+      const isOpen = !menu.classList.contains('hidden');
+      menu.classList.toggle('hidden');
+      if (arrow) arrow.textContent = isOpen ? '▾' : '▴';
+    }
+    document.addEventListener('click', (e) => {
+      const wrapper = document.getElementById('dropdown-wrapper');
+      const menu = document.getElementById('dropdown-menu');
+      if (wrapper && menu && !wrapper.contains(e.target)) {
+        menu.classList.add('hidden');
+        const arrow = document.getElementById('dropdown-arrow');
+        if (arrow) arrow.textContent = '▾';
+      }
+    });
+  </script>
+</body>
+</html>

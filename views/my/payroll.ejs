@@ -1,0 +1,48 @@
+<%- include('layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-6">給与明細</h1>
+
+<% if (payrolls.length === 0) { %>
+  <div class="bg-white rounded-xl shadow p-8 text-center text-gray-400">給与明細はまだありません</div>
+<% } else { %>
+  <div class="bg-white rounded-xl shadow overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b">
+        <tr>
+          <th class="px-4 py-3 text-left text-gray-600">対象月</th>
+          <th class="px-4 py-3 text-right text-gray-600">勤務日数</th>
+          <th class="px-4 py-3 text-right text-gray-600">労働時間</th>
+          <th class="px-4 py-3 text-right text-gray-600">総支給額</th>
+          <th class="px-4 py-3 text-right text-gray-600">控除合計</th>
+          <th class="px-4 py-3 text-right text-gray-600 font-bold">差引支給額</th>
+          <th class="px-4 py-3 text-center text-gray-600">状態</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% payrolls.forEach(p => { %>
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium"><%= p.year %>年<%= p.month %>月</td>
+            <td class="px-4 py-3 text-right"><%= p.work_days %>日</td>
+            <td class="px-4 py-3 text-right"><%= p.work_hours.toFixed(1) %>h</td>
+            <td class="px-4 py-3 text-right"><%= p.gross_pay.toLocaleString() %>円</td>
+            <td class="px-4 py-3 text-right text-red-600"><%= p.total_deduction.toLocaleString() %>円</td>
+            <td class="px-4 py-3 text-right font-bold"><%= p.net_pay.toLocaleString() %>円</td>
+            <td class="px-4 py-3 text-center">
+              <% if (p.status === 'confirmed') { %>
+                <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs">確定</span>
+              <% } else { %>
+                <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">下書き</span>
+              <% } %>
+            </td>
+            <td class="px-4 py-3">
+              <a href="/my/payroll/<%= p.id %>" class="text-green-600 hover:underline text-sm">詳細</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<%- include('footer') %>

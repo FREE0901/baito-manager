@@ -1,0 +1,229 @@
+<%- include('../layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-4">給与計算</h1>
+
+<!-- 月切り替え -->
+<div class="flex items-center gap-4 mb-6">
+  <a href="/payroll?year=<%= month === 1 ? year - 1 : year %>&month=<%= month === 1 ? 12 : month - 1 %>"
+    class="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">&laquo; 前月</a>
+  <span class="text-lg font-bold"><%= year %>年<%= month %>月</span>
+  <a href="/payroll?year=<%= month === 12 ? year + 1 : year %>&month=<%= month === 12 ? 1 : month + 1 %>"
+    class="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">翌月 &raquo;</a>
+</div>
+
+<!-- 給与計算実行 -->
+<div class="bg-white rounded-xl shadow p-5 mb-6">
+  <h2 class="font-bold text-gray-700 mb-3">給与計算を実行</h2>
+  <form method="POST" action="/payroll/calculate" class="flex flex-wrap items-end gap-3">
+    <input type="hidden" name="year" value="<%= year %>">
+    <input type="hidden" name="month" value="<%= month %>">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">従業員</label>
+      <select name="employee_id" required class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        <% employees.forEach(emp => { %>
+          <option value="<%= emp.id %>"><%= emp.name %>（<%= emp.hourly_wage.toLocaleString() %>円/h）</option>
+        <% }) %>
+      </select>
+    </div>
+    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700">
+      出勤データから計算
+    </button>
+  </form>
+</div>
+
+<!-- 給与一覧 -->
+<% if (payrolls.length > 0) { %>
+<div class="bg-white rounded-xl shadow overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 border-b">
+      <tr>
+        <th class="px-3 py-2 text-left text-gray-600">氏名</th>
+        <th class="px-3 py-2 text-right text-gray-600">勤務日数</th>
+        <th class="px-3 py-2 text-right text-gray-600">労働時間</th>
+        <th class="px-3 py-2 text-right text-gray-600">基本給</th>
+        <th class="px-3 py-2 text-right text-gray-600">総支給額</th>
+        <th class="px-3 py-2 text-right text-gray-600">控除合計</th>
+        <th class="px-3 py-2 text-right text-gray-600 font-bold">差引支給額</th>
+        <th class="px-3 py-2 text-center text-gray-600">状態</th>
+        <th class="px-3 py-2 text-gray-600">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% payrolls.forEach(p => { %>
+        <tr class="border-b hover:bg-gray-50" data-payroll-id="<%= p.id %>" data-gross-pay="<%= p.gross_pay %>" data-extra-deductions="<%= (p.deductionItems || []).reduce((s,d)=>s+d.amount,0) %>">
+          <td class="px-3 py-2 font-medium"><%= p.employee_name %></td>
+          <td class="px-3 py-2 text-right"><%= p.work_days %>日</td>
+          <td class="px-3 py-2 text-right"><%= p.work_hours.toFixed(1) %>h</td>
+          <td class="px-3 py-2 text-right"><%= p.base_pay.toLocaleString() %>円</td>
+          <td class="px-3 py-2 text-right"><%= p.gross_pay.toLocaleString() %>円</td>
+          <td class="px-3 py-2 text-right text-red-600"><%= p.total_deduction.toLocaleString() %>円</td>
+          <td class="px-3 py-2 text-right font-bold"><%= p.net_pay.toLocaleString() %>円</td>
+          <td class="px-3 py-2 text-center">
+            <% if (p.status === 'confirmed') { %>
+              <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs">確定</span>
+            <% } else { %>
+              <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">下書き</span>
+            <% } %>
+          </td>
+          <td class="px-3 py-2 space-x-2">
+            <a href="/payroll/<%= p.id %>/detail" class="text-indigo-600 hover:underline text-xs">明細</a>
+            <% if (p.status !== 'confirmed') { %>
+              <button onclick="toggleDeductions(<%= p.id %>)" class="text-orange-600 hover:underline text-xs">控除</button>
+            <% } %>
+          </td>
+        </tr>
+        <% if (p.status !== 'confirmed') { %>
+        <tr id="ded-<%= p.id %>" class="hidden bg-yellow-50 border-b">
+          <td colspan="9" class="px-4 py-4">
+
+            <!-- リアルタイム計算サマリー -->
+            <div class="flex flex-wrap gap-4 mb-4 p-3 bg-white rounded-lg border border-yellow-200 text-sm">
+              <div>総支給額: <strong class="js-gross-<%= p.id %>"><%= p.gross_pay.toLocaleString() %></strong>円</div>
+              <div class="text-red-600">控除合計: <strong class="js-ded-<%= p.id %>"><%= p.total_deduction.toLocaleString() %></strong>円</div>
+              <div class="text-green-700 font-bold">差引支給額: <strong class="js-net-<%= p.id %>"><%= p.net_pay.toLocaleString() %></strong>円</div>
+            </div>
+
+            <!-- ① 支給項目の追加 -->
+            <div class="mb-4">
+              <div class="text-xs font-bold text-blue-700 mb-2">支給項目を追加（プラス金額）</div>
+              <% if (p.allowances && p.allowances.length > 0) { %>
+                <div class="flex flex-wrap gap-2 mb-2">
+                  <% p.allowances.forEach(a => { %>
+                    <span class="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+                      <%= a.name %>: +<%= a.amount.toLocaleString() %>円
+                      <form method="POST" action="/payroll/<%= p.id %>/allowance/<%= a.id %>/delete" class="inline ml-1">
+                        <input type="hidden" name="year" value="<%= year %>">
+                        <input type="hidden" name="month" value="<%= month %>">
+                        <button type="submit" class="text-red-400 hover:text-red-600">&times;</button>
+                      </form>
+                    </span>
+                  <% }) %>
+                </div>
+              <% } %>
+              <form method="POST" action="/payroll/<%= p.id %>/allowance" class="flex flex-wrap items-end gap-2">
+                <input type="hidden" name="year" value="<%= year %>">
+                <input type="hidden" name="month" value="<%= month %>">
+                <div>
+                  <label class="text-xs text-gray-600">名目</label>
+                  <input type="text" name="name" placeholder="例: 皆勤手当" class="w-28 border rounded px-2 py-1 text-sm" required>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-600">金額（円）</label>
+                  <input type="number" name="amount" placeholder="例: 5000" class="w-24 border rounded px-2 py-1 text-sm" required>
+                </div>
+                <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">追加</button>
+              </form>
+            </div>
+
+            <!-- ② 控除項目の追加 -->
+            <div class="mb-4 pt-3 border-t border-yellow-200">
+              <div class="text-xs font-bold text-red-700 mb-2">控除項目を追加（差し引くもの）</div>
+              <% if (p.deductionItems && p.deductionItems.length > 0) { %>
+                <div class="flex flex-wrap gap-2 mb-2">
+                  <% p.deductionItems.forEach(d => { %>
+                    <span class="inline-flex items-center bg-red-100 text-red-700 text-xs px-2 py-1 rounded">
+                      <%= d.name %>: -<%= d.amount.toLocaleString() %>円
+                      <form method="POST" action="/payroll/<%= p.id %>/deduction/<%= d.id %>/delete" class="inline ml-1">
+                        <input type="hidden" name="year" value="<%= year %>">
+                        <input type="hidden" name="month" value="<%= month %>">
+                        <button type="submit" class="text-red-400 hover:text-red-600">&times;</button>
+                      </form>
+                    </span>
+                  <% }) %>
+                </div>
+              <% } %>
+              <form method="POST" action="/payroll/<%= p.id %>/deduction" class="flex flex-wrap items-end gap-2">
+                <input type="hidden" name="year" value="<%= year %>">
+                <input type="hidden" name="month" value="<%= month %>">
+                <div>
+                  <label class="text-xs text-gray-600">控除名</label>
+                  <input type="text" name="name" placeholder="例: 健康保険" class="w-28 border rounded px-2 py-1 text-sm" required>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-600">金額（円）</label>
+                  <input type="number" name="amount" placeholder="例: 3000" class="w-24 border rounded px-2 py-1 text-sm" required min="1">
+                </div>
+                <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">追加</button>
+              </form>
+            </div>
+
+            <!-- ③ 固定控除の手動調整（雇用保険・源泉徴収・その他） -->
+            <div class="pt-3 border-t border-yellow-200">
+              <div class="text-xs font-bold text-orange-700 mb-1">固定控除を手動で調整</div>
+              <div class="text-xs text-gray-500 mb-2">源泉徴収は「給与計算を実行」で自動計算されます。手動で上書きも可能です。</div>
+              <form method="POST" action="/payroll/<%= p.id %>/deductions" class="flex flex-wrap items-end gap-3">
+                <input type="hidden" name="year" value="<%= year %>">
+                <input type="hidden" name="month" value="<%= month %>">
+                <div>
+                  <label class="text-xs text-gray-600">雇用保険</label>
+                  <input type="number" name="insurance" value="<%= p.insurance %>" min="0" class="w-24 border rounded px-2 py-1 text-sm">
+                </div>
+                <div>
+                  <label class="text-xs text-gray-600">源泉徴収（自動計算済）</label>
+                  <input type="number" name="income_tax" value="<%= p.income_tax %>" min="0" class="w-28 border rounded px-2 py-1 text-sm bg-yellow-50">
+                </div>
+                <div>
+                  <label class="text-xs text-gray-600">その他控除</label>
+                  <input type="number" name="other_deduction" value="<%= p.other_deduction %>" min="0" class="w-24 border rounded px-2 py-1 text-sm">
+                </div>
+                <button type="submit" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600">更新</button>
+              </form>
+            </div>
+
+            <form method="POST" action="/payroll/<%= p.id %>/confirm" class="mt-4 pt-3 border-t border-yellow-200">
+              <input type="hidden" name="year" value="<%= year %>">
+              <input type="hidden" name="month" value="<%= month %>">
+              <button type="submit" class="bg-green-600 text-white px-4 py-1.5 rounded text-sm hover:bg-green-700" onclick="return confirm('給与を確定しますか？確定後は編集できません。')">この内容で確定する</button>
+            </form>
+          </td>
+        </tr>
+        <% } %>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% } else { %>
+  <div class="bg-white rounded-xl shadow p-8 text-center text-gray-400">
+    この月の給与データはありません。上のフォームから計算を実行してください。
+  </div>
+<% } %>
+
+<script>
+function toggleDeductions(id) {
+  const el = document.getElementById('ded-' + id);
+  el.classList.toggle('hidden');
+}
+
+// 固定控除フォームの入力値が変わったらサマリーをリアルタイム更新
+document.addEventListener('input', function(e) {
+  const form = e.target.closest('form[action*="/deductions"]');
+  if (!form) return;
+
+  // payroll_id を action から取得
+  const match = form.action.match(/\/payroll\/(\d+)\/deductions/);
+  if (!match) return;
+  const pid = match[1];
+
+  // 現在のサマリー行のdata属性から総支給額を取得
+  const row = document.querySelector('[data-payroll-id="' + pid + '"]');
+  if (!row) return;
+
+  const grossPay = parseInt(row.dataset.grossPay) || 0;
+  const insurance = parseInt(form.querySelector('[name="insurance"]')?.value) || 0;
+  const incomeTax = parseInt(form.querySelector('[name="income_tax"]')?.value) || 0;
+  const otherDeduction = parseInt(form.querySelector('[name="other_deduction"]')?.value) || 0;
+  const extraDed = parseInt(row.dataset.extraDeductions) || 0;
+  const totalDed = insurance + incomeTax + otherDeduction + extraDed;
+  const netPay = grossPay - totalDed;
+
+  // サマリー表示を更新
+  const grossEl = document.querySelector('.js-gross-' + pid);
+  const dedEl = document.querySelector('.js-ded-' + pid);
+  const netEl = document.querySelector('.js-net-' + pid);
+  if (grossEl) grossEl.textContent = grossPay.toLocaleString();
+  if (dedEl) dedEl.textContent = totalDed.toLocaleString();
+  if (netEl) netEl.textContent = netPay.toLocaleString();
+});
+</script>
+
+<%- include('../footer') %>

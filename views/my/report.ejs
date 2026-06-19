@@ -1,0 +1,48 @@
+<%- include('layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-6">業務報告</h1>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- 報告フォーム -->
+  <div class="bg-white rounded-xl shadow p-5">
+    <h2 class="font-bold text-gray-700 mb-4">報告を書く</h2>
+    <form method="POST" action="/my/report">
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">日付</label>
+          <input type="date" name="date" required value="<%= today %>" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">報告内容</label>
+          <textarea name="content" required rows="6" placeholder="今日の業務内容を記入してください" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 text-sm">報告する</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 過去の報告 -->
+  <div class="bg-white rounded-xl shadow p-5">
+    <h2 class="font-bold text-gray-700 mb-4">提出済みの報告</h2>
+    <% if (reports.length === 0) { %>
+      <p class="text-gray-400 text-sm">報告はまだありません</p>
+    <% } else { %>
+      <ul class="space-y-4">
+        <% reports.forEach(r => { %>
+          <li class="border rounded-lg p-3">
+            <div class="text-sm font-medium text-gray-700 mb-1"><%= r.date %></div>
+            <p class="text-sm text-gray-600" style="white-space: pre-wrap;"><%= r.content %></p>
+            <% if (r.admin_comment) { %>
+              <div class="mt-2 bg-indigo-50 rounded p-2">
+                <span class="text-xs text-indigo-600 font-medium">管理者コメント:</span>
+                <p class="text-sm text-indigo-700"><%= r.admin_comment %></p>
+              </div>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</div>
+
+<%- include('footer') %>

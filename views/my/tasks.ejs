@@ -1,0 +1,54 @@
+<%- include('layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-6">担当業務</h1>
+
+<% if (tasks.length === 0) { %>
+  <div class="bg-white rounded-xl shadow p-8 text-center text-gray-400">担当業務はありません</div>
+<% } else { %>
+  <div class="space-y-3">
+    <% tasks.forEach(t => { %>
+      <div class="bg-white rounded-xl shadow p-4">
+        <div class="flex flex-wrap justify-between items-start gap-2">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <% if (t.priority === 'high') { %><span class="bg-red-100 text-red-700 text-xs px-1.5 py-0.5 rounded">高</span>
+              <% } else if (t.priority === 'low') { %><span class="bg-gray-100 text-gray-500 text-xs px-1.5 py-0.5 rounded">低</span>
+              <% } else { %><span class="bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded">通常</span><% } %>
+              <span class="font-medium"><%= t.title %></span>
+              <% if (t.carried_count > 0) { %>
+                <span class="bg-purple-100 text-purple-700 text-xs px-1.5 py-0.5 rounded">持越<%= t.carried_count %>回</span>
+              <% } %>
+            </div>
+            <% if (t.description) { %><p class="text-sm text-gray-600 mt-1" style="white-space: pre-wrap;"><%= t.description %></p><% } %>
+            <% if (t.due_date) { %>
+              <p class="text-xs mt-1 <%= (t.status !== 'completed' && t.due_date < new Date().toISOString().split('T')[0]) ? 'text-red-500 font-medium' : 'text-gray-400' %>">
+                期限: <%= t.due_date %>
+                <% if (t.original_due_date && t.original_due_date !== t.due_date) { %>
+                  <span class="text-gray-300">（元: <%= t.original_due_date %>）</span>
+                <% } %>
+              </p>
+            <% } %>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <% if (t.status === 'pending') { %>
+              <form method="POST" action="/my/tasks/<%= t.id %>/update"><input type="hidden" name="status" value="in_progress"><button class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600">着手する</button></form>
+            <% } else if (t.status === 'in_progress') { %>
+              <span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded self-center">進行中</span>
+              <form method="POST" action="/my/tasks/<%= t.id %>/update"><input type="hidden" name="status" value="completed"><button class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">完了</button></form>
+            <% } else { %>
+              <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded self-center">完了</span>
+            <% } %>
+            <% if (t.status !== 'completed' && t.due_date) { %>
+              <form method="POST" action="/my/tasks/<%= t.id %>/carry-over" class="flex items-center gap-1">
+                <input type="date" name="new_due_date" class="text-xs border rounded px-1 py-0.5 w-28">
+                <button class="bg-purple-500 text-white px-2 py-1 rounded text-xs hover:bg-purple-600">持越</button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('footer') %>

@@ -1,0 +1,110 @@
+<%- include('../layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-6">データ出力</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+  <!-- DBバックアップ -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h2 class="text-lg font-bold text-gray-700 mb-2">DBバックアップ</h2>
+    <p class="text-sm text-gray-500 mb-4">データベースファイルをそのままダウンロードします。万が一の際のバックアップとしてご利用ください。</p>
+    <a href="/export/backup"
+      class="inline-block bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 text-sm">
+      ダウンロード
+    </a>
+  </div>
+
+  <!-- 出勤データCSV -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h2 class="text-lg font-bold text-gray-700 mb-2">出勤データCSV</h2>
+    <p class="text-sm text-gray-500 mb-3">指定月の出勤データをCSV形式でダウンロードします。</p>
+    <form class="flex items-end gap-3" id="attendance-csv-form">
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">年</label>
+        <select name="year" class="border rounded px-3 py-1.5 text-sm">
+          <% for (let y = year - 2; y <= year + 1; y++) { %>
+            <option value="<%= y %>" <%= y === year ? 'selected' : '' %>><%= y %></option>
+          <% } %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">月</label>
+        <select name="month" class="border rounded px-3 py-1.5 text-sm">
+          <% for (let m = 1; m <= 12; m++) { %>
+            <option value="<%= m %>" <%= m === month ? 'selected' : '' %>><%= m %>月</option>
+          <% } %>
+        </select>
+      </div>
+      <button type="button" onclick="downloadCSV('attendance')"
+        class="bg-green-600 text-white px-5 py-1.5 rounded-lg hover:bg-green-700 text-sm">
+        ダウンロード
+      </button>
+    </form>
+  </div>
+
+  <!-- 給与データCSV -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h2 class="text-lg font-bold text-gray-700 mb-2">給与データCSV</h2>
+    <p class="text-sm text-gray-500 mb-3">指定月の給与データをCSV形式でダウンロードします。</p>
+    <form class="flex items-end gap-3" id="payroll-csv-form">
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">年</label>
+        <select name="year" class="border rounded px-3 py-1.5 text-sm">
+          <% for (let y = year - 2; y <= year + 1; y++) { %>
+            <option value="<%= y %>" <%= y === year ? 'selected' : '' %>><%= y %></option>
+          <% } %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">月</label>
+        <select name="month" class="border rounded px-3 py-1.5 text-sm">
+          <% for (let m = 1; m <= 12; m++) { %>
+            <option value="<%= m %>" <%= m === month ? 'selected' : '' %>><%= m %>月</option>
+          <% } %>
+        </select>
+      </div>
+      <button type="button" onclick="downloadCSV('payroll')"
+        class="bg-green-600 text-white px-5 py-1.5 rounded-lg hover:bg-green-700 text-sm">
+        ダウンロード
+      </button>
+    </form>
+  </div>
+
+  <!-- 年間集計 -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h2 class="text-lg font-bold text-gray-700 mb-2">年間集計</h2>
+    <p class="text-sm text-gray-500 mb-3">指定年の従業員別年間集計を表示します。</p>
+    <form class="flex items-end gap-3" id="annual-form">
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">年</label>
+        <select name="year" class="border rounded px-3 py-1.5 text-sm">
+          <% for (let y = year - 2; y <= year + 1; y++) { %>
+            <option value="<%= y %>" <%= y === year ? 'selected' : '' %>><%= y %></option>
+          <% } %>
+        </select>
+      </div>
+      <button type="button" onclick="goAnnual()"
+        class="bg-blue-600 text-white px-5 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+        表示
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+  function downloadCSV(type) {
+    const form = document.getElementById(type === 'attendance' ? 'attendance-csv-form' : 'payroll-csv-form');
+    const year = form.querySelector('[name=year]').value;
+    const month = form.querySelector('[name=month]').value;
+    window.location.href = `/export/${type}-csv?year=${year}&month=${month}`;
+  }
+
+  function goAnnual() {
+    const form = document.getElementById('annual-form');
+    const year = form.querySelector('[name=year]').value;
+    window.location.href = `/export/annual?year=${year}`;
+  }
+</script>
+
+<%- include('../footer') %>

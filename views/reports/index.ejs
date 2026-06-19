@@ -1,0 +1,53 @@
+<%- include('../layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-4">業務報告一覧</h1>
+
+<!-- 月切り替え -->
+<div class="flex items-center gap-4 mb-6">
+  <a href="/reports?year=<%= month === 1 ? year - 1 : year %>&month=<%= month === 1 ? 12 : month - 1 %>"
+    class="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">&laquo; 前月</a>
+  <span class="text-lg font-bold"><%= year %>年<%= month %>月</span>
+  <a href="/reports?year=<%= month === 12 ? year + 1 : year %>&month=<%= month === 12 ? 1 : month + 1 %>"
+    class="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">翌月 &raquo;</a>
+</div>
+
+<% if (reports.length > 0) { %>
+  <div class="space-y-4">
+    <% reports.forEach(report => { %>
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="flex flex-wrap items-center gap-3 mb-3">
+          <span class="text-sm font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded"><%= report.date %></span>
+          <span class="text-sm font-medium text-gray-700"><%= report.employee_name %></span>
+        </div>
+
+        <div class="text-sm text-gray-800 mb-4" style="white-space: pre-wrap;"><%= report.content %></div>
+
+        <!-- 管理者コメント -->
+        <div class="border-t pt-3">
+          <% if (report.admin_comment) { %>
+            <div class="mb-2">
+              <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded">管理者コメント</span>
+              <p class="text-sm text-gray-700 mt-1" style="white-space: pre-wrap;"><%= report.admin_comment %></p>
+            </div>
+          <% } %>
+          <form method="POST" action="/reports/<%= report.id %>/comment" class="flex flex-col sm:flex-row gap-2">
+            <input type="hidden" name="year" value="<%= year %>">
+            <input type="hidden" name="month" value="<%= month %>">
+            <input type="text" name="admin_comment" placeholder="コメントを入力..."
+              value="<%= report.admin_comment || '' %>"
+              class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-indigo-700 whitespace-nowrap">
+              コメント保存
+            </button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } else { %>
+  <div class="bg-white rounded-xl shadow p-8 text-center text-gray-500">
+    この月の報告はありません
+  </div>
+<% } %>
+
+<%- include('../footer') %>

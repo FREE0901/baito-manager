@@ -1,0 +1,85 @@
+<%- include('layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-4">出退勤記録</h1>
+
+<form method="GET" action="/my/attendance" class="flex flex-wrap items-end gap-3 mb-6">
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">年</label>
+    <input type="number" name="year" value="<%= year %>" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-24">
+  </div>
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">月</label>
+    <select name="month" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <% for (let m = 1; m <= 12; m++) { %>
+        <option value="<%= m %>" <%= month === m ? 'selected' : '' %>><%= m %>月</option>
+      <% } %>
+    </select>
+  </div>
+  <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700">表示</button>
+</form>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">勤務日数</div>
+    <div class="text-xl font-bold text-green-600"><%= summary.workDays %>日</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">総労働時間</div>
+    <div class="text-xl font-bold text-blue-600"><%= summary.totalHours.toFixed(1) %>h</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">出社</div>
+    <div class="text-xl font-bold text-indigo-600"><%= summary.officeDays %>日</div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-3 text-center">
+    <div class="text-xs text-gray-500">リモート</div>
+    <div class="text-xl font-bold text-purple-600"><%= summary.remoteDays %>日</div>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl shadow overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 border-b">
+      <tr>
+        <th class="px-3 py-2 text-center text-gray-600">日付</th>
+        <th class="px-3 py-2 text-center text-gray-600">区分</th>
+        <th class="px-3 py-2 text-center text-gray-600">出勤</th>
+        <th class="px-3 py-2 text-center text-gray-600">退勤</th>
+        <th class="px-3 py-2 text-center text-gray-600">休憩</th>
+        <th class="px-3 py-2 text-center text-gray-600">実働</th>
+        <th class="px-3 py-2 text-center text-gray-600">備考</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (records.length === 0) { %>
+        <tr><td colspan="7" class="px-3 py-4 text-center text-gray-400">この月の記録はありません</td></tr>
+      <% } %>
+      <% records.forEach(r => { %>
+        <% if (r.clock_in && r.clock_out) { %>
+          <%
+            const [inH, inM] = r.clock_in.split(':').map(Number);
+            const [outH, outM] = r.clock_out.split(':').map(Number);
+            const worked = ((outH * 60 + outM - inH * 60 - inM - (r.break_minutes || 0)) / 60).toFixed(1);
+          %>
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-3 py-2 text-center"><%= r.date %></td>
+            <td class="px-3 py-2 text-center">
+              <% if (r.work_type === 'remote') { %>
+                <span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs">リモート</span>
+              <% } else { %>
+                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">出社</span>
+              <% } %>
+            </td>
+            <td class="px-3 py-2 text-center"><%= r.clock_in %></td>
+            <td class="px-3 py-2 text-center"><%= r.clock_out %></td>
+            <td class="px-3 py-2 text-center"><%= r.break_minutes %>分</td>
+            <td class="px-3 py-2 text-center font-medium"><%= worked %>h</td>
+            <td class="px-3 py-2 text-gray-500"><%= r.note || '' %></td>
+          </tr>
+        <% } %>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('footer') %>

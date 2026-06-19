@@ -1,0 +1,55 @@
+<%- include('../layout') %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">年間集計 <%= year %>年</h1>
+  <a href="/export" class="text-indigo-600 hover:text-indigo-800 text-sm">&larr; データ出力に戻る</a>
+</div>
+
+<% if (rows.length === 0) { %>
+  <div class="bg-white rounded-xl shadow p-8 text-center text-gray-500">
+    <p><%= year %>年のデータがありません。</p>
+  </div>
+<% } else { %>
+  <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="text-left px-4 py-3 font-semibold text-gray-600">氏名</th>
+            <th class="text-right px-4 py-3 font-semibold text-gray-600">勤務日数</th>
+            <th class="text-right px-4 py-3 font-semibold text-gray-600">労働時間</th>
+            <th class="text-right px-4 py-3 font-semibold text-gray-600">総支給額</th>
+            <th class="text-right px-4 py-3 font-semibold text-gray-600">控除合計</th>
+            <th class="text-right px-4 py-3 font-semibold text-gray-600">差引支給額</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% let totalDays = 0, totalHours = 0, totalGross = 0, totalDed = 0, totalNet = 0; %>
+          <% rows.forEach(r => { %>
+            <% totalDays += (r.work_days || 0); totalHours += (r.work_hours || 0); totalGross += (r.gross_pay || 0); totalDed += (r.total_deduction || 0); totalNet += (r.net_pay || 0); %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 font-medium text-gray-800"><%= r.name %></td>
+              <td class="px-4 py-3 text-right"><%= r.work_days || 0 %></td>
+              <td class="px-4 py-3 text-right"><%= (r.work_hours || 0).toFixed(1) %></td>
+              <td class="px-4 py-3 text-right">&yen;<%= (r.gross_pay || 0).toLocaleString() %></td>
+              <td class="px-4 py-3 text-right">&yen;<%= (r.total_deduction || 0).toLocaleString() %></td>
+              <td class="px-4 py-3 text-right font-bold">&yen;<%= (r.net_pay || 0).toLocaleString() %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+        <tfoot class="bg-gray-50 font-bold">
+          <tr>
+            <td class="px-4 py-3 text-gray-700">合計</td>
+            <td class="px-4 py-3 text-right"><%= totalDays %></td>
+            <td class="px-4 py-3 text-right"><%= totalHours.toFixed(1) %></td>
+            <td class="px-4 py-3 text-right">&yen;<%= totalGross.toLocaleString() %></td>
+            <td class="px-4 py-3 text-right">&yen;<%= totalDed.toLocaleString() %></td>
+            <td class="px-4 py-3 text-right">&yen;<%= totalNet.toLocaleString() %></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../footer') %>

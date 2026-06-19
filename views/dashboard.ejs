@@ -1,0 +1,105 @@
+<%- include('layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-6">ダッシュボード</h1>
+
+<!-- アラート -->
+<% if (contractAlerts.length > 0) { %>
+<div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+  <h3 class="text-red-700 font-bold text-sm mb-2">契約更新リマインダー</h3>
+  <% contractAlerts.forEach(e => { %>
+    <p class="text-sm text-red-600"><%= e.name %> - 契約終了日: <%= e.contract_end_date %></p>
+  <% }) %>
+</div>
+<% } %>
+
+<% if (pendingLeaves.length > 0) { %>
+<div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6">
+  <h3 class="text-purple-700 font-bold text-sm mb-2">有給申請（承認待ち）</h3>
+  <div class="flex flex-wrap gap-2">
+    <% pendingLeaves.forEach(l => { %>
+      <span class="text-sm text-purple-600 bg-purple-100 px-2 py-0.5 rounded"><%= l.employee_name %> - <%= l.date %></span>
+    <% }) %>
+  </div>
+  <a href="/leaves" class="text-purple-600 hover:underline text-xs mt-2 inline-block">有給管理へ →</a>
+</div>
+<% } %>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-xl shadow p-5">
+    <div class="text-sm text-gray-500">従業員数（在籍）</div>
+    <div class="text-3xl font-bold text-indigo-600 mt-1"><%= employeeCount %><span class="text-base font-normal text-gray-500"> 名</span></div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-5">
+    <div class="text-sm text-gray-500"><%= month %>月の勤務日数</div>
+    <div class="text-3xl font-bold text-green-600 mt-1"><%= monthlyAttendance.work_days || 0 %><span class="text-base font-normal text-gray-500"> 日</span></div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-5">
+    <div class="text-sm text-gray-500"><%= month %>月の総労働時間</div>
+    <div class="text-3xl font-bold text-blue-600 mt-1"><%= (monthlyAttendance.total_hours || 0).toFixed(1) %><span class="text-base font-normal text-gray-500"> h</span></div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="bg-white rounded-xl shadow p-5">
+    <h2 class="font-bold text-gray-700 mb-3">今日のシフト（<%= today %>）</h2>
+    <% if (todayShifts.length === 0) { %>
+      <p class="text-gray-400 text-sm">今日のシフトはありません</p>
+    <% } else { %>
+      <ul class="space-y-2">
+        <% todayShifts.forEach(s => { %>
+          <li class="flex justify-between items-center py-2 border-b">
+            <span class="font-medium"><%= s.name %></span>
+            <span class="text-sm text-gray-500"><%= s.start_time %> - <%= s.end_time %></span>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+
+  <div class="bg-white rounded-xl shadow p-5">
+    <h2 class="font-bold text-gray-700 mb-3">今後7日間のシフト</h2>
+    <% if (upcomingShifts.length === 0) { %>
+      <p class="text-gray-400 text-sm">予定されたシフトはありません</p>
+    <% } else { %>
+      <ul class="space-y-2">
+        <% upcomingShifts.forEach(s => { %>
+          <li class="flex justify-between items-center py-2 border-b">
+            <div>
+              <span class="font-medium"><%= s.name %></span>
+              <span class="text-xs text-gray-400 ml-2"><%= s.date %></span>
+            </div>
+            <span class="text-sm text-gray-500"><%= s.start_time %> - <%= s.end_time %></span>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</div>
+
+<!-- 未返信の業務報告 -->
+<% if (unrepliedReports.length > 0) { %>
+<div class="bg-white rounded-xl shadow p-5 mt-6">
+  <h2 class="font-bold text-gray-700 mb-3">未返信の業務報告</h2>
+  <ul class="space-y-2">
+    <% unrepliedReports.forEach(r => { %>
+      <li class="flex justify-between items-center py-2 border-b">
+        <div>
+          <span class="font-medium text-sm"><%= r.employee_name %></span>
+          <span class="text-xs text-gray-400 ml-2"><%= r.date %></span>
+          <p class="text-sm text-gray-500 truncate max-w-md"><%= r.content.substring(0, 60) %><%= r.content.length > 60 ? '...' : '' %></p>
+        </div>
+        <a href="/reports" class="text-indigo-600 hover:underline text-xs">返信</a>
+      </li>
+    <% }) %>
+  </ul>
+</div>
+<% } %>
+
+<div class="mt-6 flex flex-wrap gap-3">
+  <a href="/employees/new" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">+ 従業員を登録</a>
+  <a href="/shifts" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700">シフト管理</a>
+  <a href="/attendance" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">出退勤入力</a>
+  <a href="/payroll" class="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-700">給与計算</a>
+</div>
+
+<%- include('footer') %>

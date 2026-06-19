@@ -1,0 +1,30 @@
+<%- include('layout') %>
+
+<h1 class="text-2xl font-bold text-gray-800 mb-6">書類確認</h1>
+
+<div class="bg-white rounded-xl shadow p-6">
+  <% if (docs.length === 0) { %>
+    <p class="text-gray-400 text-center py-8">書類はまだアップロードされていません</p>
+  <% } else { %>
+    <div class="space-y-3">
+      <% docs.forEach(doc => { %>
+        <div class="flex items-center justify-between border rounded-lg px-4 py-3 hover:bg-gray-50">
+          <div>
+            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded mr-2"><%= doc.document_type %></span>
+            <span class="text-sm font-medium text-gray-700"><%= doc.original_name %></span>
+            <% if (doc.note) { %><span class="text-xs text-gray-400 ml-2"><%= doc.note %></span><% } %>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-gray-400"><%= doc.uploaded_at.slice(0, 10) %></span>
+            <a href="/my/documents/<%= doc.id %>/download"
+              class="bg-indigo-600 text-white text-xs px-3 py-1 rounded hover:bg-indigo-700">
+              ダウンロード
+            </a>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('footer') %>
