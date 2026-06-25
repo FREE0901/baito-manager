@@ -93,9 +93,11 @@ router.post('/calculate', (req, res) => {
   const insurance = existing ? existing.insurance : 0;
   const otherDeduction = existing ? existing.other_deduction : 0;
 
-  // 源泉徴収: 社会保険等控除後の課税対象額から自動計算
+  // 源泉徴収: 交通費（非課税）と社会保険等を除いた課税対象額から自動計算
+  // 通勤手当は月15万円まで非課税（所得税法）
+  const nonTaxableTransport = Math.min(transportCost, 150000);
   const socialDeductions = insurance + deductionsTotal;
-  const taxableIncome = Math.max(0, grossPay - socialDeductions);
+  const taxableIncome = Math.max(0, grossPay - nonTaxableTransport - socialDeductions);
   const incomeTax = calcWithholdingTax(taxableIncome, employee.tax_table || '乙');
 
   const totalDeduction = insurance + incomeTax + otherDeduction + deductionsTotal;
