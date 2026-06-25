@@ -52,6 +52,70 @@
     </tbody>
   </table>
 
+  <!-- 出勤日一覧 -->
+  <% if (attendances && attendances.length > 0) { %>
+  <table class="w-full text-sm border-collapse mb-4">
+    <thead>
+      <tr class="bg-gray-100">
+        <th colspan="7" class="border px-3 py-2 text-left text-gray-700">出勤日一覧</th>
+      </tr>
+      <tr class="bg-gray-50 text-xs text-gray-500">
+        <th class="border px-2 py-1 text-left">日付</th>
+        <th class="border px-2 py-1 text-center">種別</th>
+        <th class="border px-2 py-1 text-center">出勤</th>
+        <th class="border px-2 py-1 text-center">退勤</th>
+        <th class="border px-2 py-1 text-center">休憩</th>
+        <th class="border px-2 py-1 text-center">適用時間</th>
+        <th class="border px-2 py-1 text-center">時間外</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% const weekdays = ['日','月','火','水','木','金','土']; %>
+      <% attendances.forEach(a => { %>
+        <%
+          const dp = a.date.split('-').map(Number);
+          const wd = weekdays[new Date(dp[0], dp[1]-1, dp[2]).getDay()];
+          let workedMin = 0;
+          if (a.clock_in && a.clock_out) {
+            const [iH, iM] = a.clock_in.split(':').map(Number);
+            const [oH, oM] = a.clock_out.split(':').map(Number);
+            workedMin = Math.max(0, (oH*60+oM) - (iH*60+iM) - (a.break_minutes || 0));
+          }
+          const wH = Math.floor(workedMin/60);
+          const wM = workedMin % 60;
+          const otMin = a.overtime_minutes || 0;
+          const otH = Math.floor(otMin/60);
+          const otM = otMin % 60;
+        %>
+        <tr class="hover:bg-gray-50">
+          <td class="border px-2 py-1 whitespace-nowrap"><%= a.date.slice(5).replace('-','/') %>（<%= wd %>）</td>
+          <td class="border px-2 py-1 text-center">
+            <% if (a.work_type === 'remote') { %>
+              <span class="text-blue-600 text-xs font-medium">リモート</span>
+            <% } else { %>
+              <span class="text-green-700 text-xs font-medium">通勤</span>
+            <% } %>
+          </td>
+          <td class="border px-2 py-1 text-center"><%= a.clock_in || '-' %></td>
+          <td class="border px-2 py-1 text-center"><%= a.clock_out || '-' %></td>
+          <td class="border px-2 py-1 text-center"><%= a.break_minutes || 0 %>分</td>
+          <td class="border px-2 py-1 text-center font-medium">
+            <%= wH %>:<%= String(wM).padStart(2,'0') %>
+            <span class="text-gray-400 text-xs">(<%= (workedMin/60).toFixed(1) %>h)</span>
+          </td>
+          <td class="border px-2 py-1 text-center text-xs">
+            <% if (otMin > 0) { %>
+              <span class="text-orange-600"><%= otH %>:<%= String(otM).padStart(2,'0') %></span>
+            <% } else { %>
+              <span class="text-gray-300">-</span>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+
   <!-- 支給 -->
   <table class="w-full text-sm border-collapse mb-4">
     <thead><tr class="bg-indigo-50"><th colspan="2" class="border px-3 py-2 text-left text-indigo-700">支給項目</th></tr></thead>

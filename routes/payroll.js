@@ -214,7 +214,13 @@ router.get('/:id/detail', (req, res) => {
   if (!payroll) return res.redirect('/payroll');
   const allowances = req.db.prepare('SELECT * FROM payroll_allowances WHERE payroll_id = ? ORDER BY id').all(req.params.id);
   const deductionItems = req.db.prepare('SELECT * FROM payroll_deductions WHERE payroll_id = ? ORDER BY id').all(req.params.id);
-  res.render('payroll/detail', { payroll, allowances, deductionItems });
+  const monthStr = `${payroll.year}-${String(payroll.month).padStart(2, '0')}`;
+  const attendances = req.db.prepare(`
+    SELECT * FROM attendance
+    WHERE employee_id = ? AND date LIKE ? || '%' AND clock_in IS NOT NULL
+    ORDER BY date
+  `).all(payroll.employee_id, monthStr);
+  res.render('payroll/detail', { payroll, allowances, deductionItems, attendances });
 });
 
 router.post('/:id/confirm', (req, res) => {
