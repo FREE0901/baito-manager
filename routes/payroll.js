@@ -317,7 +317,8 @@ function calcWithholdingTax(taxableIncome, taxTable) {
     return Math.floor((taxableIncome * 0.24504 - 133869) / 10) * 10;
   } else {
     // 乙欄（扶養控除等申告書未提出・アルバイトに多い）
-    if (taxableIncome < 87000) return 0;
+    // 甲欄と異なり乙欄は非課税ゾーンなし。1円以上あれば3.063%を徴収
+    if (taxableIncome <= 0) return 0;
     if (taxableIncome < 300000) return Math.floor(taxableIncome * 0.03063 / 100) * 100;
     if (taxableIncome < 350000) return Math.floor((taxableIncome * 0.06126 - 9188) / 100) * 100;
     if (taxableIncome < 400000) return Math.floor((taxableIncome * 0.0735 - 13520) / 100) * 100;
