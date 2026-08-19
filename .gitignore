@@ -5,3 +5,7 @@ db/database.sqlite-wal
 .env
 *.env.local
 data/
+
+# SNS動画分析ツールの作業ディレクトリ
+analysis/
+videos/
